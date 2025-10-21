@@ -6,12 +6,12 @@ const HeaderContainer = styled.nav`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #fe3a4d;
+  background-color: var(--main);
   padding: 0 2rem;
 `;
 
 const Title = styled.h1`
-  color: #f9f6ee;
+  color: var(--light);
 `;
 
 const Header = () => {
