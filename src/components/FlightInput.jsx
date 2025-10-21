@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 const Container = styled.div`
   padding: 3rem;
@@ -31,6 +32,12 @@ const Button = styled.button`
   font-size: 1.6rem;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  outline: none;
+
+  &:focus,
+  &:active {
+    outline: none;
+  }
 
   &:hover {
     background-color: var(--main-hover);
@@ -43,13 +50,27 @@ const FlightInput = ({ flights, setFlights }) => {
   const handleAddFlight = () => {
     if (flightNumber.trim() !== '') {
       setFlights([...flights, flightNumber.trim()]);
+      toast.success(`Flight ${flightNumber.trim()} added to the list!`);
       setFlightNumber('');
+    } else {
+      toast.error('Please enter a valid flight number.');
     }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleAddFlight();
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const alphanumericOnly = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+    setFlightNumber(alphanumericOnly);
   };
 
   return (
     <Container>
-      <Input type="text" placeholder="Enter flight number" onChange={(e) => setFlightNumber(e.target.value)} />
+      <Input type="text" placeholder="Enter flight number" onChange={handleInputChange} value={flightNumber} onKeyDown={handleKeyDown} />
       <Button onClick={handleAddFlight}>Add to List</Button>
     </Container>
   );

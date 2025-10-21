@@ -1,3 +1,4 @@
+import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import FlightInput from './components/FlightInput';
 import styled from 'styled-components';
@@ -20,6 +21,7 @@ function App() {
         <FlightInput flights={flights} setFlights={setFlights} />
         <FlightList flights={flights} />
       </Main>
+      <Toaster toastOptions={{ className: 'toast' }} />
     </>
   );
 }
