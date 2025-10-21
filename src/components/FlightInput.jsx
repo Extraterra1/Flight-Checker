@@ -64,8 +64,10 @@ const FlightInput = ({ flights, setFlights }) => {
   };
 
   const handleInputChange = (e) => {
-    const alphanumericOnly = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
-    setFlightNumber(alphanumericOnly);
+    // Convert to uppercase and remove any non-alphanumeric characters
+    const input = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+    setFlightNumber(input);
   };
 
   return (
