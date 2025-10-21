@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { useState } from 'react';
 
 const Container = styled.div`
   padding: 3rem;
@@ -36,11 +37,20 @@ const Button = styled.button`
   }
 `;
 
-const FlightInput = () => {
+const FlightInput = ({ flights, setFlights }) => {
+  const [flightNumber, setFlightNumber] = useState('');
+
+  const handleAddFlight = () => {
+    if (flightNumber.trim() !== '') {
+      setFlights([...flights, flightNumber.trim()]);
+      setFlightNumber('');
+    }
+  };
+
   return (
     <Container>
-      <Input type="text" placeholder="Enter flight number" />
-      <Button>Add to List</Button>
+      <Input type="text" placeholder="Enter flight number" onChange={(e) => setFlightNumber(e.target.value)} />
+      <Button onClick={handleAddFlight}>Add to List</Button>
     </Container>
   );
 };

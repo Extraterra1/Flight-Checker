@@ -1,6 +1,7 @@
 import Header from './components/Header';
 import FlightInput from './components/FlightInput';
 import styled from 'styled-components';
+import { useState } from 'react';
 import './index.css';
 import FlightList from './components/FlightList';
 
@@ -11,12 +12,13 @@ const Main = styled.main`
 `;
 
 function App() {
+  const [flights, setFlights] = useState([]);
   return (
     <>
       <Header />
       <Main>
-        <FlightInput />
-        <FlightList flights={[]} />
+        <FlightInput flights={flights} setFlights={setFlights} />
+        <FlightList flights={flights} />
       </Main>
     </>
   );
