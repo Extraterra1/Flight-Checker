@@ -48,7 +48,8 @@ const FlightInput = ({ flights, setFlights }) => {
   const [flightNumber, setFlightNumber] = useState('');
 
   const handleAddFlight = () => {
-    if (flightNumber.trim() !== '') {
+    const flightNumberPattern = /^[A-Z]{2,3}\d{2,5}$/;
+    if (flightNumber.trim() !== '' && flightNumberPattern.test(flightNumber)) {
       setFlights([...flights, flightNumber.trim()]);
       toast.success(`Flight ${flightNumber.trim()} added to the list!`);
       setFlightNumber('');
