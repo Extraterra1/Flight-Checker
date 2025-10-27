@@ -27,7 +27,7 @@ const Status = styled.span`
         return 'var(--warning)'; // Blue
       case 'Departed':
         return 'var(--primary)'; // Orange
-      case 'Landed':
+      case 'Arrived':
         return 'var(--success)'; // Green
       default:
         return 'var(--gray)'; // Gray (fallback)
@@ -68,13 +68,16 @@ const FlightItem = styled.div`
       transition: color 0.3s ease;
     }
 
-    & > :first-child:hover {
+    & > .radar:hover {
+      color: var(--dark);
+    }
+    & > .refresh:hover {
       color: var(--primary);
     }
-    & > :nth-child(2):hover {
+    & > .edit:hover {
       color: var(--warning);
     }
-    & > :nth-child(3):hover {
+    & > .delete:hover {
       color: var(--danger);
     }
   }
@@ -97,9 +100,18 @@ const FlightList = ({ flights }) => {
                 <span className="time">{`${flight.status != 'Arrived' ? 'Lands at ' : 'Landed at '} ${flight.arriving}`}</span>
 
                 <div className="icons">
-                  <Icon icon="material-symbols:refresh-rounded" width="24" height="24" />
-                  <Icon icon="material-symbols:edit-rounded" width="24" height="24" />
-                  <Icon icon="material-symbols:delete-forever-rounded" width="24" height="24" />
+                  <a
+                    href={`https://www.flightradar24.com/${flight.icao}${flight.number}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="View on Flightradar"
+                    className="radar"
+                  >
+                    <Icon icon="material-symbols:radar" width="24" height="24" />
+                  </a>
+                  <Icon className="refresh" icon="material-symbols:refresh-rounded" width="24" height="24" />
+                  <Icon className="edit" icon="material-symbols:edit-rounded" width="24" height="24" />
+                  <Icon className="delete" icon="material-symbols:delete-forever-rounded" width="24" height="24" />
                 </div>
               </div>
             </FlightItem>
