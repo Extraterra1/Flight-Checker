@@ -58,7 +58,6 @@ const FlightInput = ({ flights, setFlights }) => {
         id: doc.id,
         ...doc.data()
       }));
-      console.log(flightsData);
       setFlights(flightsData);
     };
 
@@ -66,7 +65,7 @@ const FlightInput = ({ flights, setFlights }) => {
   }, []);
 
   const handleAddFlight = () => {
-    const flightNumberPattern = /^[A-Z]{2,3}\d{2,5}$/;
+    const flightNumberPattern = /^[A-Z]{1,3}\d{2,5}$/;
     if (flightNumber.trim() !== '' && flightNumberPattern.test(flightNumber)) {
       setFlights([...flights, flightNumber.trim()]);
       toast.success(`Flight ${flightNumber.trim()} added to the list!`);
