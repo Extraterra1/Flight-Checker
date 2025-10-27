@@ -39,6 +39,7 @@ const Status = styled.span`
 const FlightItem = styled.div`
   display: flex;
   justify-content: space-between;
+  align-items: center;
 
   padding: 2rem 3rem;
   border-radius: 1rem;
@@ -50,6 +51,27 @@ const FlightItem = styled.div`
   & > div {
     > span.flight {
       font-weight: 800;
+    }
+  }
+
+  & div.info {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+
+    & .car {
+      display: flex;
+      flex-direction: column;
+      font-size: 1.8rem;
+      font-weight: 700;
+
+      & > span {
+        padding: 0.2rem 0;
+      }
+
+      & .model {
+        border-top: 2px dashed var(--light);
+      }
     }
   }
 
@@ -92,8 +114,12 @@ const FlightList = ({ flights }) => {
         <FlightsContainer>
           {flights.map((flight) => (
             <FlightItem key={flight.id}>
-              <div>
+              <div className="info">
                 <span className="flight">Flight:</span> {flight.icao + flight.number}
+                <div className="car">
+                  <span className="plate">{flight.car.plate}</span>
+                  <span className="model">{flight.car.model}</span>
+                </div>
               </div>
               <div>
                 <Status $status={flight.status}>{flight.status}</Status>
