@@ -1,6 +1,10 @@
 import styled from 'styled-components';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useEffect } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+
+import { db } from '../firebase';
 
 const Container = styled.div`
   padding: 3rem;
@@ -46,6 +50,20 @@ const Button = styled.button`
 
 const FlightInput = ({ flights, setFlights }) => {
   const [flightNumber, setFlightNumber] = useState('');
+
+  useEffect(() => {
+    const fetchFlights = async () => {
+      const querySnapshot = await getDocs(collection(db, 'flights'));
+      const flightsData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      console.log(flightsData);
+      setFlights(flightsData);
+    };
+
+    fetchFlights();
+  }, []);
 
   const handleAddFlight = () => {
     const flightNumberPattern = /^[A-Z]{2,3}\d{2,5}$/;

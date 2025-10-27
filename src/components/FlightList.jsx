@@ -20,6 +20,22 @@ const FlightsContainer = styled.div`
   flex-grow: 1;
 `;
 
+const Status = styled.span`
+  color: ${({ $status }) => {
+    switch ($status) {
+      case 'Scheduled':
+        return 'var(--warning)'; // Blue
+      case 'Departed':
+        return 'var(--primary)'; // Orange
+      case 'Landed':
+        return 'var(--success)'; // Green
+      default:
+        return 'var(--gray)'; // Gray (fallback)
+    }
+  }};
+  font-weight: 700;
+`;
+
 const FlightItem = styled.div`
   display: flex;
   justify-content: space-between;
@@ -31,8 +47,10 @@ const FlightItem = styled.div`
   background-color: var(--main-light);
   color: var(--light);
 
-  & > div:first-child > span {
-    font-weight: 800;
+  & > div {
+    > span.flight {
+      font-weight: 800;
+    }
   }
 
   & > div:last-child {
@@ -51,10 +69,13 @@ const FlightItem = styled.div`
     }
 
     & > :first-child:hover {
-      color: var(--danger);
+      color: var(--primary);
     }
     & > :nth-child(2):hover {
-      color: var(--primary);
+      color: var(--warning);
+    }
+    & > :nth-child(3):hover {
+      color: var(--danger);
     }
   }
 `;
@@ -67,15 +88,18 @@ const FlightList = ({ flights }) => {
       ) : (
         <FlightsContainer>
           {flights.map((flight) => (
-            <FlightItem key={flight}>
+            <FlightItem key={flight.id}>
               <div>
-                <span>Flight Number:</span> {flight.toUpperCase()}
+                <span className="flight">Flight:</span> {flight.icao + flight.number}
               </div>
               <div>
-                <span>Landed at 16:03</span>
+                <Status $status={flight.status}>{flight.status}</Status>
+                <span className="time">{`${flight.status != 'Arrived' ? 'Lands at ' : 'Landed at '} ${flight.arriving}`}</span>
+
                 <div className="icons">
-                  <Icon icon="material-symbols:delete-forever-rounded" width="24" height="24" />
                   <Icon icon="material-symbols:refresh-rounded" width="24" height="24" />
+                  <Icon icon="material-symbols:edit-rounded" width="24" height="24" />
+                  <Icon icon="material-symbols:delete-forever-rounded" width="24" height="24" />
                 </div>
               </div>
             </FlightItem>
