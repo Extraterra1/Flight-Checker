@@ -64,7 +64,7 @@ const FlightInput = ({ flights, setFlights }) => {
     };
 
     fetchFlights();
-  }, []);
+  });
 
   const handleAddFlight = async () => {
     const flightNumberPattern = /^[A-Z]{1,3}\d{2,5}$/;
@@ -84,7 +84,6 @@ const FlightInput = ({ flights, setFlights }) => {
 
         // Use the API response data
         const flightData = response.data;
-        console.log(flightData);
 
         const newFlight = {
           arriving: flightData.time || 'N/A', // Use API data if available

@@ -1,7 +1,8 @@
 import styled from 'styled-components';
 import { Icon } from '@iconify/react';
-import { doc, deleteDoc } from 'firebase/firestore';
+import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 import { db } from '../firebase';
 
@@ -129,6 +130,50 @@ const FlightList = ({ flights, setFlights }) => {
     }
   };
 
+  const refreshFlight = (id) => async () => {
+    try {
+      // Find the flight in local state
+      const flight = flights.find((f) => f.id === id);
+      if (!flight) {
+        toast.error('Flight not found');
+        return;
+      }
+
+      const icao = flight.icao;
+      const number = flight.number;
+
+      // Fetch updated flight data
+      const fetchFlightData = axios.get(`${import.meta.env.VITE_API_URL}?icao=${icao}&number=${number}`);
+
+      const response = await toast.promise(fetchFlightData, {
+        loading: 'Refreshing flight information...',
+        success: 'Flight data updated!',
+        error: 'Could not refresh flight data'
+      });
+
+      const flightData = response.data;
+
+      // Update in Firebase
+      const flightRef = doc(db, 'flights', id);
+      const updatedFlight = {
+        ...flight,
+        arriving: flightData.time || flight.time,
+        status: flightData.status || flight.status
+      };
+
+      await updateDoc(flightRef, {
+        arriving: updatedFlight.arriving,
+        status: updatedFlight.status
+      });
+
+      // Update local state
+      setFlights(flights.map((f) => (f.id === id ? { ...f, ...updatedFlight } : f)));
+    } catch (err) {
+      console.error('Error refreshing flight:', err);
+      toast.error('Failed to refresh flight');
+    }
+  };
+
   return (
     <Container>
       {flights.length === 0 ? (
@@ -159,7 +204,7 @@ const FlightList = ({ flights, setFlights }) => {
                   >
                     <Icon icon="material-symbols:radar" width="24" height="24" />
                   </a>
-                  <Icon className="refresh" icon="material-symbols:refresh-rounded" width="24" height="24" />
+                  <Icon onClick={refreshFlight(flight.id)} className="refresh" icon="material-symbols:refresh-rounded" width="24" height="24" />
                   <Icon className="edit" icon="material-symbols:edit-rounded" width="24" height="24" />
                   <Icon onClick={deleteFlight(flight.id)} className="delete" icon="material-symbols:delete-forever-rounded" width="24" height="24" />
                 </div>
