@@ -72,6 +72,7 @@ const FlightItem = styled.div`
       flex-direction: column;
       font-size: 1.8rem;
       font-weight: 700;
+      text-align: center;
 
       & > span {
         padding: 0.2rem 0;

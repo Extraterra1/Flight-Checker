@@ -3,8 +3,9 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useEffect } from 'react';
 import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
-import cars from '/src/cars.json';
+import axios from 'axios';
 
+// import cars from '/src/cars.json';
 import { db } from '../firebase';
 
 const Container = styled.div`
@@ -68,22 +69,40 @@ const FlightInput = ({ flights, setFlights }) => {
   const handleAddFlight = async () => {
     const flightNumberPattern = /^[A-Z]{1,3}\d{2,5}$/;
     if (flightNumber.trim() !== '' && flightNumberPattern.test(flightNumber)) {
+      const icao = flightNumber.slice(0, 2);
+      const number = flightNumber.slice(2);
+
+      // Create the promise for fetching flight data
+      const fetchFlightData = axios.get(`${import.meta.env.VITE_API_URL}?icao=${icao}&number=${number}`);
+
       try {
+        // Use toast.promise to show loading, success, and error states
+        const response = await toast.promise(fetchFlightData, {
+          loading: 'Fetching flight information...',
+          success: 'Flight data retrieved!'
+        });
+
+        // Use the API response data
+        const flightData = response.data;
+        console.log(flightData);
+
         const newFlight = {
-          arriving: '11:30',
-          // car: cars[Math.floor(Math.random() * cars.length)],
-          clientName: 'John Doe',
+          arriving: flightData.time || 'N/A', // Use API data if available
+          car: '',
+          clientName: '',
           date: serverTimestamp(),
-          icao: flightNumber.slice(0, 2).toUpperCase(),
-          number: flightNumber.slice(2),
-          status: 'Arrived'
+          icao: icao,
+          number: number,
+          status: flightData.status || 'N/A' // Use API data if available
         };
+
         const docRef = await addDoc(collection(db, 'flights'), newFlight);
         setFlights([...flights, { id: docRef.id, ...newFlight }]);
         setFlightNumber('');
         toast.success('Flight added to the list!');
       } catch (err) {
-        toast.error('Error adding flight. Please try again.');
+        if (err.status === 404) return toast.error('Flight not found. Please check the flight number and try again.');
+        toast.error('Something went wrong');
         console.error('Error adding document: ', err);
       }
     } else {
