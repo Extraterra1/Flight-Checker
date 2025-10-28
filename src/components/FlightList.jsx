@@ -52,6 +52,10 @@ const FlightItem = styled.div`
     > span.flight {
       font-weight: 800;
     }
+    > span.number {
+      font-weight: 800;
+      min-width: 15rem;
+    }
   }
 
   & div.info {
@@ -115,7 +119,8 @@ const FlightList = ({ flights }) => {
           {flights.map((flight) => (
             <FlightItem key={flight.id}>
               <div className="info">
-                <span className="flight">Flight:</span> {flight.icao + flight.number}
+                <span className="flight">Flight:</span>
+                <span className="number">{flight.icao + flight.number}</span>
                 <div className="car">
                   <span className="plate">{flight.car.plate}</span>
                   <span className="model">{flight.car.model}</span>
