@@ -71,7 +71,7 @@ const FlightInput = ({ flights, setFlights }) => {
       try {
         const newFlight = {
           arriving: '11:30',
-          car: cars[Math.floor(Math.random() * cars.length)],
+          // car: cars[Math.floor(Math.random() * cars.length)],
           clientName: 'John Doe',
           date: serverTimestamp(),
           icao: flightNumber.slice(0, 2).toUpperCase(),

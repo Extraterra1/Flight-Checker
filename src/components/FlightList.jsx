@@ -140,8 +140,8 @@ const FlightList = ({ flights, setFlights }) => {
                 <span className="flight">Flight:</span>
                 <span className="number">{flight.icao + flight.number}</span>
                 <div className="car">
-                  <span className="plate">{flight.car.plate}</span>
-                  <span className="model">{flight.car.model}</span>
+                  <span className="plate">{flight.car && flight.car.plate}</span>
+                  <span className="model">{flight.car && flight.car.model}</span>
                 </div>
               </div>
               <div>
