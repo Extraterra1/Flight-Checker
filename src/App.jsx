@@ -19,7 +19,7 @@ function App() {
       <Header />
       <Main>
         <FlightInput flights={flights} setFlights={setFlights} />
-        <FlightList flights={flights} />
+        <FlightList flights={flights} setFlights={setFlights} />
       </Main>
       <Toaster toastOptions={{ className: 'toast' }} />
     </>

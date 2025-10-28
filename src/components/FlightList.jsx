@@ -1,5 +1,9 @@
 import styled from 'styled-components';
 import { Icon } from '@iconify/react';
+import { doc, deleteDoc } from 'firebase/firestore';
+import toast from 'react-hot-toast';
+
+import { db } from '../firebase';
 
 const Container = styled.div`
   padding: 2rem;
@@ -109,7 +113,21 @@ const FlightItem = styled.div`
   }
 `;
 
-const FlightList = ({ flights }) => {
+const FlightList = ({ flights, setFlights }) => {
+  const deleteFlight = (id) => async () => {
+    try {
+      // Delete from Firebase
+      await deleteDoc(doc(db, 'flights', id));
+
+      // Update local state
+      setFlights(flights.filter((flight) => flight.id !== id));
+      toast.success('Flight deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting flight:', error);
+      toast.error('Failed to delete flight.');
+    }
+  };
+
   return (
     <Container>
       {flights.length === 0 ? (
@@ -142,7 +160,7 @@ const FlightList = ({ flights }) => {
                   </a>
                   <Icon className="refresh" icon="material-symbols:refresh-rounded" width="24" height="24" />
                   <Icon className="edit" icon="material-symbols:edit-rounded" width="24" height="24" />
-                  <Icon className="delete" icon="material-symbols:delete-forever-rounded" width="24" height="24" />
+                  <Icon onClick={deleteFlight(flight.id)} className="delete" icon="material-symbols:delete-forever-rounded" width="24" height="24" />
                 </div>
               </div>
             </FlightItem>
