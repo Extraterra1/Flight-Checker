@@ -2,7 +2,8 @@ import styled from 'styled-components';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import cars from '/src/cars.json';
 
 import { db } from '../firebase';
 
@@ -64,12 +65,27 @@ const FlightInput = ({ flights, setFlights }) => {
     fetchFlights();
   }, []);
 
-  const handleAddFlight = () => {
+  const handleAddFlight = async () => {
     const flightNumberPattern = /^[A-Z]{1,3}\d{2,5}$/;
     if (flightNumber.trim() !== '' && flightNumberPattern.test(flightNumber)) {
-      setFlights([...flights, flightNumber.trim()]);
-      toast.success(`Flight ${flightNumber.trim()} added to the list!`);
-      setFlightNumber('');
+      try {
+        const newFlight = {
+          arriving: '11:30',
+          car: cars[Math.floor(Math.random() * cars.length)],
+          clientName: 'John Doe',
+          date: serverTimestamp(),
+          icao: flightNumber.slice(0, 2).toUpperCase(),
+          number: flightNumber.slice(2),
+          status: 'Arrived'
+        };
+        const docRef = await addDoc(collection(db, 'flights'), newFlight);
+        setFlights([...flights, { id: docRef.id, ...newFlight }]);
+        setFlightNumber('');
+        toast.success('Flight added to the list!');
+      } catch (err) {
+        toast.error('Error adding flight. Please try again.');
+        console.error('Error adding document: ', err);
+      }
     } else {
       toast.error('Please enter a valid flight number.');
     }
