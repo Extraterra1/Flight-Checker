@@ -78,8 +78,8 @@ const FlightInput = ({ flights, setFlights }) => {
       try {
         // Use toast.promise to show loading, success, and error states
         const response = await toast.promise(fetchFlightData, {
-          loading: 'Fetching flight information...',
-          success: 'Flight data retrieved!'
+          loading: 'Fetching flight information...'
+          // success: 'Flight data retrieved!'
         });
 
         // Use the API response data
