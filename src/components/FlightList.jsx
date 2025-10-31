@@ -100,6 +100,12 @@ const FlightItem = styled.div`
       transition: color 0.3s ease;
     }
 
+    & > .radar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     & > .radar:hover {
       color: var(--dark);
     }
