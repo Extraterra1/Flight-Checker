@@ -69,7 +69,7 @@ const FlightInput = ({ flights, setFlights }) => {
   const handleAddFlight = async () => {
     const flightNumberPattern = /^[A-Z]{1,3}\d{2,5}$/;
     if (flightNumber.trim() !== '' && flightNumberPattern.test(flightNumber)) {
-      const icao = flightNumber.slice(0, 2);
+      const icao = flightNumber.slice(0, 2) === 'W4' ? 'WMT' : flightNumber.slice(0, 2);
       const number = flightNumber.slice(2);
 
       // Create the promise for fetching flight data
