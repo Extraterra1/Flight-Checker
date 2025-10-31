@@ -1,10 +1,12 @@
 import styled from 'styled-components';
+import { useState } from 'react';
 import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { MdRadar, MdDelete, MdEdit, MdRefresh } from 'react-icons/md';
 
 import { db } from '../firebase';
+import DeleteModal from './DeleteModal';
 
 const Container = styled.div`
   padding: 2rem;
@@ -122,17 +124,36 @@ const FlightItem = styled.div`
 `;
 
 const FlightList = ({ flights, setFlights }) => {
-  const deleteFlight = async (id) => {
+  // Modal state for delete confirmation
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+
+  const openDeleteModal = (id, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    setSelectedId(id);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedId(null);
+    setIsModalOpen(false);
+  };
+
+  const performDelete = async () => {
+    if (!selectedId) return;
     try {
-      const deletePromise = deleteDoc(doc(db, 'flights', id));
+      const deletePromise = deleteDoc(doc(db, 'flights', selectedId));
       await toast.promise(deletePromise, {
         loading: 'Deleting flight...',
         success: 'Flight deleted successfully!',
         error: 'Failed to delete flight.'
       });
-      setFlights(flights.filter((flight) => flight.id !== id));
+      setFlights((prev) => prev.filter((flight) => flight.id !== selectedId));
     } catch (error) {
       console.error('Error deleting flight:', error);
+      toast.error('Failed to delete flight.');
+    } finally {
+      closeModal();
     }
   };
 
@@ -206,13 +227,14 @@ const FlightList = ({ flights, setFlights }) => {
                   </a>
                   <MdRefresh onClick={() => refreshFlight(flight.id)} className="refresh" />
                   <MdEdit className="edit" />
-                  <MdDelete onClick={() => deleteFlight(flight.id)} className="delete" />
+                  <MdDelete onClick={(e) => openDeleteModal(flight.id, e)} className="delete" />
                 </div>
               </div>
             </FlightItem>
           ))}
         </FlightsContainer>
       )}
+      <DeleteModal isOpen={isModalOpen} onConfirm={performDelete} onCancel={closeModal} />
     </Container>
   );
 };
