@@ -116,12 +116,9 @@ const FlightItem = styled.div`
 `;
 
 const FlightList = ({ flights, setFlights }) => {
-  const deleteFlight = (id) => async () => {
+  const deleteFlight = async (id) => {
     try {
-      // Delete from Firebase
       await deleteDoc(doc(db, 'flights', id));
-
-      // Update local state
       setFlights(flights.filter((flight) => flight.id !== id));
       toast.success('Flight deleted successfully!');
     } catch (error) {
@@ -206,7 +203,7 @@ const FlightList = ({ flights, setFlights }) => {
                   </a>
                   <Icon onClick={refreshFlight(flight.id)} className="refresh" icon="material-symbols:refresh-rounded" width="24" height="24" />
                   <Icon className="edit" icon="material-symbols:edit-rounded" width="24" height="24" />
-                  <Icon onClick={deleteFlight(flight.id)} className="delete" icon="material-symbols:delete-forever-rounded" width="24" height="24" />
+                  <Icon onClick={() => deleteFlight(flight.id)} className="delete" icon="material-symbols:delete-forever-rounded" width="24" height="24" />
                 </div>
               </div>
             </FlightItem>
