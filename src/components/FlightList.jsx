@@ -1,8 +1,8 @@
 import styled from 'styled-components';
-import { Icon } from '@iconify/react';
 import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { MdRadar, MdDelete, MdEdit, MdRefresh } from 'react-icons/md';
 
 import { db } from '../firebase';
 
@@ -118,28 +118,27 @@ const FlightItem = styled.div`
 const FlightList = ({ flights, setFlights }) => {
   const deleteFlight = async (id) => {
     try {
-      await deleteDoc(doc(db, 'flights', id));
+      const deletePromise = deleteDoc(doc(db, 'flights', id));
+      await toast.promise(deletePromise, {
+        loading: 'Deleting flight...',
+        success: 'Flight deleted successfully!',
+        error: 'Failed to delete flight.'
+      });
       setFlights(flights.filter((flight) => flight.id !== id));
-      toast.success('Flight deleted successfully!');
     } catch (error) {
       console.error('Error deleting flight:', error);
-      toast.error('Failed to delete flight.');
     }
   };
 
-  const refreshFlight = (id) => async () => {
+  const refreshFlight = async (id) => {
     try {
-      // Find the flight in local state
       const flight = flights.find((f) => f.id === id);
       if (!flight) {
         toast.error('Flight not found');
         return;
       }
 
-      const icao = flight.icao;
-      const number = flight.number;
-
-      // Fetch updated flight data
+      const { icao, number } = flight;
       const fetchFlightData = axios.get(`${import.meta.env.VITE_API_URL}?icao=${icao}&number=${number}`);
 
       const response = await toast.promise(fetchFlightData, {
@@ -150,7 +149,6 @@ const FlightList = ({ flights, setFlights }) => {
 
       const flightData = response.data;
 
-      // Update in Firebase
       const flightRef = doc(db, 'flights', id);
       const updatedFlight = {
         ...flight,
@@ -163,8 +161,7 @@ const FlightList = ({ flights, setFlights }) => {
         status: updatedFlight.status
       });
 
-      // Update local state
-      setFlights(flights.map((f) => (f.id === id ? { ...f, ...updatedFlight } : f)));
+      setFlights((prevFlights) => prevFlights.map((f) => (f.id === id ? { ...f, ...updatedFlight } : f)));
     } catch (err) {
       console.error('Error refreshing flight:', err);
       toast.error('Failed to refresh flight');
@@ -199,11 +196,11 @@ const FlightList = ({ flights, setFlights }) => {
                     title="View on Flightradar"
                     className="radar"
                   >
-                    <Icon icon="material-symbols:radar" width="24" height="24" />
+                    <MdRadar />
                   </a>
-                  <Icon onClick={refreshFlight(flight.id)} className="refresh" icon="material-symbols:refresh-rounded" width="24" height="24" />
-                  <Icon className="edit" icon="material-symbols:edit-rounded" width="24" height="24" />
-                  <Icon onClick={() => deleteFlight(flight.id)} className="delete" icon="material-symbols:delete-forever-rounded" width="24" height="24" />
+                  <MdRefresh onClick={() => refreshFlight(flight.id)} className="refresh" />
+                  <MdEdit className="edit" />
+                  <MdDelete onClick={() => deleteFlight(flight.id)} className="delete" />
                 </div>
               </div>
             </FlightItem>

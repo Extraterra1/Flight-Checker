@@ -25,7 +25,7 @@ const ImageContainer = styled.div`
   img {
     height: 100%;
     width: auto;
-    max-height: 4rem;
+    max-height: 10rem;
     object-fit: contain;
   }
 `;
@@ -40,7 +40,6 @@ const Header = () => {
       <ImageContainer>
         <img src={gladplane} alt="Just Drive Madeira Logo" />
       </ImageContainer>
-      {/* <Title>JustDrive</Title> */}
     </HeaderContainer>
   );
 };
