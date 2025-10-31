@@ -12,8 +12,8 @@ const Overlay = styled.div`
 `;
 
 const Dialog = styled.div`
-  background: var(--main-light);
-  color: var(--light);
+  background: var(--light);
+  color: var(--dark);
   padding: 2rem;
   border-radius: 0.75rem;
   min-width: 320px;
@@ -40,7 +40,7 @@ const Button = styled.button`
   border: 2px solid transparent;
 
   &.cancel {
-    background: transparent;
+    background: var(--primary);
     color: var(--light);
     border-color: rgba(255, 255, 255, 0.08);
   }
