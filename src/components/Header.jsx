@@ -1,4 +1,6 @@
 import styled from 'styled-components';
+import gladplane from '../assets/gladplane.png';
+import JDLogo from '../assets/JDLogo.png';
 
 const HeaderContainer = styled.nav`
   width: 100%;
@@ -14,10 +16,27 @@ const Title = styled.h1`
   color: var(--light);
 `;
 
+const ImageContainer = styled.div`
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0.5rem;
+
+  img {
+    height: 100%;
+    width: auto;
+    max-height: 4rem;
+    object-fit: contain;
+  }
+`;
+
 const Header = () => {
   return (
     <HeaderContainer>
       <Title>Flight Checker</Title>
+      <ImageContainer>
+        <img src={JDLogo} alt="" />
+      </ImageContainer>
       <Title>JustDrive</Title>
     </HeaderContainer>
   );
