@@ -1,6 +1,6 @@
 import styled from 'styled-components';
-import gladplane from '../assets/gladplane.png';
 import JDLogo from '../assets/JDLogo.png';
+import gladplane from '../assets/gladplane.png';
 
 const HeaderContainer = styled.nav`
   width: 100%;
@@ -35,9 +35,12 @@ const Header = () => {
     <HeaderContainer>
       <Title>Flight Checker</Title>
       <ImageContainer>
-        <img src={JDLogo} alt="" />
+        <img src={JDLogo} alt="Just Drive Madeira Logo" />
       </ImageContainer>
-      <Title>JustDrive</Title>
+      <ImageContainer>
+        <img src={gladplane} alt="Just Drive Madeira Logo" />
+      </ImageContainer>
+      {/* <Title>JustDrive</Title> */}
     </HeaderContainer>
   );
 };

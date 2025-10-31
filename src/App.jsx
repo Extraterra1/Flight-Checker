@@ -1,10 +1,11 @@
 import { Toaster } from 'react-hot-toast';
-import Header from './components/Header';
-import FlightInput from './components/FlightInput';
 import styled from 'styled-components';
 import { useState } from 'react';
 import './index.css';
+
 import FlightList from './components/FlightList';
+import Header from './components/Header';
+import FlightInput from './components/FlightInput';
 
 const Main = styled.main`
   background-color: var(--light);
