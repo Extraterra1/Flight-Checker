@@ -19,13 +19,39 @@ function App() {
   const [flights, setFlights] = useState([]);
   // Realtime subscription to flights collection
   useEffect(() => {
-    // Query with orderBy to keep a stable ordering (adjust field as needed)
+    // Query with orderBy to keep a stable ordering on server-side (we still sort by arriving client-side)
     const q = query(collection(db, 'flights'), orderBy('date', 'desc'));
+
+    const parseArriving = (val) => {
+      // Firestore Timestamp
+      if (val && typeof val.toDate === 'function') return val.toDate().getTime();
+      if (!val) return Number.POSITIVE_INFINITY;
+      if (typeof val === 'number') return val;
+      if (val instanceof Date) return val.getTime();
+      if (typeof val === 'string') {
+        // Try ISO parse
+        const iso = Date.parse(val);
+        if (!isNaN(iso)) return iso;
+        // Try HH:MM (assume today)
+        const hm = val.match(/^(\d{1,2}):(\d{2})$/);
+        if (hm) {
+          const now = new Date();
+          const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(hm[1], 10), parseInt(hm[2], 10));
+          return d.getTime();
+        }
+        // Try numeric
+        const num = Number(val);
+        if (!isNaN(num)) return num;
+      }
+      return Number.POSITIVE_INFINITY;
+    };
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
         const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        // Sort by arriving time ascending (earliest first)
+        list.sort((a, b) => parseArriving(a.arriving) - parseArriving(b.arriving));
         setFlights(list);
       },
       (error) => {
