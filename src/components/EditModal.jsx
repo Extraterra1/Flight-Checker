@@ -19,11 +19,14 @@ const Dialog = styled.div`
   min-width: 320px;
   max-width: 90%;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 `;
 
 const Title = styled.h3`
   margin: 0 0 1rem 0;
-  font-size: 1.6rem;
+  font-size: 3rem;
 `;
 
 const Field = styled.div`
@@ -31,6 +34,10 @@ const Field = styled.div`
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 1rem;
+
+  & label {
+    font-size: 1.4rem;
+  }
 `;
 
 const Select = styled.select`
@@ -44,11 +51,11 @@ const Select = styled.select`
 const Buttons = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: 1.5rem;
 `;
 
 const Button = styled.button`
-  padding: 0.6rem 1rem;
+  padding: 0.6rem 2rem;
   border-radius: 0.5rem;
   font-size: 1.4rem;
   cursor: pointer;
