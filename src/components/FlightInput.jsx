@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useEffect } from 'react';
-import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import axios from 'axios';
 
 // import cars from '/src/cars.json';
@@ -54,16 +54,8 @@ const FlightInput = ({ flights, setFlights }) => {
   const [flightNumber, setFlightNumber] = useState('');
 
   useEffect(() => {
-    const fetchFlights = async () => {
-      const querySnapshot = await getDocs(collection(db, 'flights'));
-      const flightsData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setFlights(flightsData);
-    };
-
-    fetchFlights();
+    // Flight list is now provided by a realtime subscription in App.jsx;
+    // remove direct getDocs fetch so we don't duplicate work or cause race conditions.
   });
 
   const handleAddFlight = async () => {
