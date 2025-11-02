@@ -16,6 +16,26 @@ const Container = styled.div`
   justify-content: center;
 `;
 
+const Controls = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 3rem 1rem 3rem;
+`;
+
+const RefreshAllButton = styled.button`
+  border-radius: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: var(--main);
+  color: var(--light);
+  border: 2px solid transparent;
+  font-size: 1.4rem;
+  cursor: pointer;
+  &:hover {
+    background: var(--main-hover);
+  }
+`;
+
 const EmptyMessage = styled.h4`
   color: var(--dark);
   font-size: 3rem;
@@ -159,6 +179,49 @@ const FlightList = ({ flights, setFlights }) => {
     }
   };
 
+  const refreshAll = async () => {
+    if (!flights || flights.length === 0) return;
+
+    const toastId = toast.loading('Refreshing all flights...');
+
+    const promises = flights.map(async (flight) => {
+      try {
+        const { icao, number } = flight;
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}?icao=${icao}&number=${number}`);
+        const flightData = response.data;
+        const flightRef = doc(db, 'flights', flight.id);
+        const updatedFields = {
+          arriving: flightData.time || flight.arriving,
+          status: flightData.status || flight.status
+        };
+        await updateDoc(flightRef, updatedFields);
+        return { id: flight.id, updatedFields };
+      } catch (err) {
+        return { id: flight.id, error: err };
+      }
+    });
+
+    const results = await Promise.all(promises);
+
+    const successes = results.filter((r) => !r.error);
+    const failures = results.filter((r) => r.error);
+
+    if (successes.length > 0) {
+      setFlights((prev) =>
+        prev.map((f) => {
+          const s = successes.find((x) => x.id === f.id);
+          return s ? { ...f, ...s.updatedFields } : f;
+        })
+      );
+    }
+
+    if (failures.length === 0) {
+      toast.success('All flights refreshed!', { id: toastId });
+    } else {
+      toast.error(`${failures.length} flights failed to refresh`, { id: toastId });
+    }
+  };
+
   const refreshFlight = async (id) => {
     try {
       const flight = flights.find((f) => f.id === id);
@@ -237,6 +300,11 @@ const FlightList = ({ flights, setFlights }) => {
 
   return (
     <Container>
+      <Controls>
+        <RefreshAllButton onClick={refreshAll} title="Refresh all flights">
+          Refresh All
+        </RefreshAllButton>
+      </Controls>
       {flights.length === 0 ? (
         <EmptyMessage>No flights added yet.</EmptyMessage>
       ) : (
