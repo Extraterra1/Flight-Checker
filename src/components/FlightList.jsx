@@ -7,6 +7,8 @@ import { MdRadar, MdDelete, MdEdit, MdRefresh } from 'react-icons/md';
 
 import { db } from '../firebase';
 import DeleteModal from './DeleteModal';
+import EditModal from './EditModal';
+import cars from '../cars.json';
 
 const Container = styled.div`
   padding: 2rem;
@@ -195,6 +197,44 @@ const FlightList = ({ flights, setFlights }) => {
     }
   };
 
+  // removed placeholder
+
+  // Edit modal state
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingFlight, setEditingFlight] = useState(null);
+
+  const openEditModal = (flight, e) => {
+    console.log('xd');
+    if (e && e.stopPropagation) e.stopPropagation();
+    setEditingFlight(flight);
+    setIsEditOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setEditingFlight(null);
+    setIsEditOpen(false);
+  };
+
+  const performEdit = async (selectedCar) => {
+    if (!editingFlight) return;
+    try {
+      const flightRef = doc(db, 'flights', editingFlight.id);
+      const updatePromise = updateDoc(flightRef, { car: selectedCar });
+      await toast.promise(updatePromise, {
+        loading: 'Updating flight...',
+        success: 'Flight updated!',
+        error: 'Failed to update flight.'
+      });
+
+      setFlights((prev) => prev.map((f) => (f.id === editingFlight.id ? { ...f, car: selectedCar } : f)));
+    } catch (err) {
+      console.error('Error updating flight:', err);
+      toast.error('Failed to update flight.');
+    } finally {
+      closeEditModal();
+    }
+  };
+
   return (
     <Container>
       {flights.length === 0 ? (
@@ -226,7 +266,7 @@ const FlightList = ({ flights, setFlights }) => {
                     <MdRadar />
                   </a>
                   <MdRefresh onClick={() => refreshFlight(flight.id)} className="refresh" />
-                  <MdEdit className="edit" />
+                  <MdEdit onClick={(e) => openEditModal(flight, e)} className="edit" />
                   <MdDelete onClick={(e) => openDeleteModal(flight.id, e)} className="delete" />
                 </div>
               </div>
@@ -235,6 +275,7 @@ const FlightList = ({ flights, setFlights }) => {
         </FlightsContainer>
       )}
       <DeleteModal isOpen={isModalOpen} onConfirm={performDelete} onCancel={closeModal} />
+      <EditModal isOpen={isEditOpen} flight={editingFlight} cars={cars} onConfirm={performEdit} onCancel={closeEditModal} />
     </Container>
   );
 };
