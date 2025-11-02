@@ -12,8 +12,6 @@ import cars from '../cars.json';
 
 const Container = styled.div`
   padding: 2rem;
-  display: flex;
-  justify-content: center;
 `;
 
 const Controls = styled.div`
@@ -25,14 +23,20 @@ const Controls = styled.div`
 
 const RefreshAllButton = styled.button`
   border-radius: 0.75rem;
-  padding: 0.6rem 1rem;
+  padding: 1.5rem 2.5rem;
   background: var(--main);
   color: var(--light);
   border: 2px solid transparent;
-  font-size: 1.4rem;
+  font-size: 2rem;
   cursor: pointer;
+
+  transition: background 0.3s ease;
+  outline: none;
+  border: none;
   &:hover {
     background: var(--main-hover);
+    outline: none;
+    border: none;
   }
 `;
 
