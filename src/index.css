@@ -29,10 +29,12 @@
   --gray-dark: #343a40;
   --primary: #007bff;
   --secondary: #6c757d;
+  --danger: #dc3545;
+  --danger-hover: #e4606d;
   --success: #28a745;
+  --success-hover: #5cd67d;
   --info: #17a2b8;
   --warning: #ffc107;
-  --danger: #dc3545;
   --light: #f9f6ee;
   --dark: #343a40;
   --dark-hover: #484d53;

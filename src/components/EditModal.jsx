@@ -52,6 +52,13 @@ const Button = styled.button`
   border-radius: 0.5rem;
   font-size: 1.4rem;
   cursor: pointer;
+
+  background-color: ${(props) => (props.$cancel ? 'var(--danger)' : 'var(--success)')};
+  transition: background-color 0.3s ease-in;
+
+  &:hover {
+    background-color: ${(props) => (props.$cancel ? 'var(--danger-hover)' : 'var(--success-hover)')};
+  }
 `;
 
 const EditModal = ({ isOpen, flight, cars = [], onConfirm, onCancel }) => {
@@ -84,10 +91,10 @@ const EditModal = ({ isOpen, flight, cars = [], onConfirm, onCancel }) => {
         </Field>
 
         <Buttons>
-          <Button onClick={onCancel} aria-label="Cancel">
+          <Button $cancel onClick={onCancel} aria-label="Cancel">
             Cancel
           </Button>
-          <Button onClick={handleConfirm} aria-label="Save">
+          <Button $save onClick={handleConfirm} aria-label="Save">
             Save
           </Button>
         </Buttons>
