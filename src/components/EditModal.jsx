@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
+import Select from 'react-select';
 
 const Overlay = styled.div`
   position: fixed;
@@ -40,13 +41,7 @@ const Field = styled.div`
   }
 `;
 
-const Select = styled.select`
-  padding: 0.6rem 0.75rem;
-  border-radius: 0.5rem;
-  background: white;
-  color: black;
-  font-size: 1.4rem;
-`;
+/* react-select provides its own styles; we removed the native styled select */
 
 const Buttons = styled.div`
   display: flex;
@@ -69,18 +64,44 @@ const Button = styled.button`
 `;
 
 const EditModal = ({ isOpen, flight, cars = [], onConfirm, onCancel }) => {
-  const [selectedPlate, setSelectedPlate] = useState('');
+  // react-select uses an object option { value, label }
+  const [selectedOption, setSelectedOption] = useState(null);
+
+  // Memoize options so their identity is stable across renders — prevents effect from resetting selection
+  const options = useMemo(() => cars.map((c) => ({ value: c.plate, label: `${c.plate} — ${c.model}` })), [cars]);
 
   useEffect(() => {
     if (!isOpen) return;
-    setSelectedPlate(flight && flight.car ? flight.car.plate : (cars[0] && cars[0].plate) || '');
-  }, [isOpen, flight, cars]);
+    const initialPlate = flight && flight.car ? flight.car.plate : (cars[0] && cars[0].plate) || null;
+    const initial = options.find((o) => o.value === initialPlate) || options[0] || null;
+    setSelectedOption(initial);
+  }, [isOpen, flight, options, cars]);
 
   if (!isOpen) return null;
 
   const handleConfirm = () => {
-    const selectedCar = cars.find((c) => c.plate === selectedPlate) || null;
+    const selectedCar = cars.find((c) => c.plate === (selectedOption && selectedOption.value)) || null;
     onConfirm(selectedCar);
+  };
+
+  // react-select custom styles: ensure text uses the app variable --dark and keep menu above modal
+  const selectStyles = {
+    menu: (base) => ({ ...base, zIndex: 2000 }),
+    control: (base, state) => ({
+      ...base,
+      background: 'white',
+      borderColor: state.isFocused ? 'var(--main)' : base.borderColor,
+      boxShadow: state.isFocused ? `0 0 0 1px var(--main)` : base.boxShadow,
+      color: 'var(--dark)'
+    }),
+    singleValue: (base) => ({ ...base, color: 'var(--dark)' }),
+    placeholder: (base) => ({ ...base, color: 'var(--dark)', opacity: 0.8 }),
+    input: (base) => ({ ...base, color: 'var(--dark)' }),
+    option: (base, state) => ({
+      ...base,
+      color: state.isSelected ? 'white' : 'var(--dark) ',
+      backgroundColor: state.isSelected ? 'var(--main)' : base.backgroundColor
+    })
   };
 
   return (
@@ -90,11 +111,15 @@ const EditModal = ({ isOpen, flight, cars = [], onConfirm, onCancel }) => {
 
         <Field>
           <label htmlFor="car-select">Choose a car</label>
-          <Select id="car-select" value={selectedPlate} onChange={(e) => setSelectedPlate(e.target.value)}>
-            {cars.map((car) => (
-              <option key={car.plate} value={car.plate}>{`${car.plate} — ${car.model}`}</option>
-            ))}
-          </Select>
+          <Select
+            inputId="car-select"
+            options={options}
+            value={selectedOption}
+            onChange={setSelectedOption}
+            isSearchable
+            placeholder="Select a car..."
+            styles={selectStyles}
+          />
         </Field>
 
         <Buttons>
