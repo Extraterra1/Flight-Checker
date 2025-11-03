@@ -1,7 +1,6 @@
 import styled from 'styled-components';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { useEffect } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import axios from 'axios';
 
@@ -53,15 +52,12 @@ const Button = styled.button`
 const FlightInput = ({ flights, setFlights }) => {
   const [flightNumber, setFlightNumber] = useState('');
 
-  useEffect(() => {
-    // Flight list is now provided by a realtime subscription in App.jsx;
-    // remove direct getDocs fetch so we don't duplicate work or cause race conditions.
-  });
-
   const handleAddFlight = async () => {
     const flightNumberPattern = /^[A-Z]{1,3}\d{2,5}$/;
     if (flightNumber.trim() !== '' && flightNumberPattern.test(flightNumber)) {
-      const icao = flightNumber.slice(0, 2) === 'W4' ? 'WMT' : flightNumber.slice(0, 2);
+      let icao = flightNumber.slice(0, 2);
+      if (icao === 'W4') icao = 'WMT';
+      if (icao === 'DI') icao = 'MBU';
       const number = flightNumber.slice(2);
 
       // Create the promise for fetching flight data
