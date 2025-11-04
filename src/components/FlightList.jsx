@@ -12,6 +12,15 @@ import cars from '../cars.json';
 
 const Container = styled.div`
   padding: 2rem;
+  display: flex;
+  flex-direction: column;
+
+  & > .empty {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 `;
 
 const Controls = styled.div`
@@ -310,7 +319,9 @@ const FlightList = ({ flights, setFlights }) => {
         </RefreshAllButton>
       </Controls>
       {flights.length === 0 ? (
-        <EmptyMessage>No flights added yet.</EmptyMessage>
+        <div className="empty">
+          <EmptyMessage>No flights added yet.</EmptyMessage>
+        </div>
       ) : (
         <FlightsContainer>
           {flights.map((flight) => (
