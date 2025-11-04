@@ -53,11 +53,12 @@ const FlightInput = ({ flights, setFlights }) => {
   const [flightNumber, setFlightNumber] = useState('');
 
   const handleAddFlight = async () => {
-    const flightNumberPattern = /^[A-Z]{1,3}\d{2,5}$/;
+    const flightNumberPattern = /^(?:[A-Z0-9]{1,3})\d{2,5}$/;
     if (flightNumber.trim() !== '' && flightNumberPattern.test(flightNumber)) {
       let icao = flightNumber.slice(0, 2);
       if (icao === 'W4') icao = 'WMT';
       if (icao === 'DI') icao = 'MBU';
+      if (icao === '4Y') icao = '4Y*';
       const number = flightNumber.slice(2);
 
       // Create the promise for fetching flight data
