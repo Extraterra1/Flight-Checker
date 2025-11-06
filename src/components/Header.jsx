@@ -43,6 +43,8 @@ const ImageContainer = styled.div`
     object-fit: contain;
   }
   @media (max-width: 700px) {
+    display: none;
+
     img {
       max-height: 3.5rem;
     }
@@ -56,8 +58,8 @@ const Header = () => {
       <ImageContainer>
         <img src={JDLogo} alt="Just Drive Madeira Logo" />
       </ImageContainer>
-      <ImageContainer>
-        <img src={gladplane} alt="Just Drive Madeira Logo" />
+      <ImageContainer className="gladplane">
+        <img src={gladplane} alt="Gladplane" />
       </ImageContainer>
     </HeaderContainer>
   );

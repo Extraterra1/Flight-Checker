@@ -106,6 +106,11 @@ const FlightItem = styled.div`
   @media (max-width: 900px) {
     padding: 1.2rem 1.2rem;
     font-size: 1.8rem;
+
+    & > div.actions {
+      display: flex;
+      justify-content: space-around;
+    }
   }
 
   @media (max-width: 480px) {
@@ -113,14 +118,14 @@ const FlightItem = styled.div`
     align-items: stretch;
     gap: 0.8rem;
     padding: 0.9rem 0.9rem;
-    font-size: 1.6rem;
+    font-size: 2rem;
   }
 
   & > div {
-    > span.flight {
+    & span.flight {
       font-weight: 800;
     }
-    > span.number {
+    & span.number {
       font-weight: 800;
       min-width: 15rem;
     }
@@ -130,6 +135,15 @@ const FlightItem = styled.div`
     display: flex;
     gap: 2rem;
     align-items: center;
+
+    @media (max-width: 700px) {
+      justify-content: space-around;
+    }
+
+    & > .flightNumber {
+      display: flex;
+      gap: 1rem;
+    }
 
     & .car {
       display: flex;
@@ -353,14 +367,16 @@ const FlightList = ({ flights, setFlights }) => {
           {flights.map((flight) => (
             <FlightItem key={flight.id}>
               <div className="info">
-                <span className="flight">Flight:</span>
-                <span className="number">{flight.icao + flight.number}</span>
+                <div className="flightNumber">
+                  <span className="flight">Flight:</span>
+                  <span className="number">{flight.icao + flight.number}</span>
+                </div>
                 <div className="car">
                   <span className="plate">{flight.car && flight.car.plate}</span>
                   <span className="model">{flight.car && flight.car.model}</span>
                 </div>
               </div>
-              <div>
+              <div className="actions">
                 <Status $status={flight.status}>{flight.status}</Status>
                 <span className="time">{`${flight.status != 'Arrived' ? 'Lands at ' : 'Landed at '} ${flight.arriving}`}</span>
 
