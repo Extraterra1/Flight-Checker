@@ -61,7 +61,7 @@ const Button = styled.button`
     background-color: var(--main-hover);
   }
   @media (max-width: 700px) {
-    font-size: 1.4rem;
+    font-size: 1.8rem;
     padding: 0.9rem 1rem;
     width: 100%;
   }

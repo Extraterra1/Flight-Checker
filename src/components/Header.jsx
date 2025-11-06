@@ -14,7 +14,7 @@ const HeaderContainer = styled.nav`
 
   @media (max-width: 700px) {
     height: auto;
-    padding: 0.5rem 1rem;
+    padding: 2rem 1rem;
     flex-direction: column;
     align-items: center;
     row-gap: 0.5rem;
@@ -27,6 +27,7 @@ const Title = styled.h1`
 
   @media (max-width: 700px) {
     font-size: 1.6rem;
+    display: none;
   }
 `;
 
@@ -43,7 +44,9 @@ const ImageContainer = styled.div`
     object-fit: contain;
   }
   @media (max-width: 700px) {
-    display: none;
+    &.gladplane {
+      display: none;
+    }
 
     img {
       max-height: 3.5rem;
