@@ -27,7 +27,7 @@ const Controls = styled.div`
   width: 100%;
   display: flex;
   justify-content: flex-end;
-  padding: 0 3rem 1rem 3rem;
+  padding: 0 0 1rem 3rem;
   box-sizing: border-box;
 
   @media (max-width: 700px) {
