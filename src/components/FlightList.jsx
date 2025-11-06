@@ -54,8 +54,12 @@ const RefreshAllButton = styled.button`
     border: none;
   }
   @media (max-width: 700px) {
-    padding: 0.6rem 1rem;
-    font-size: 1.4rem;
+    border-radius: 1.4rem;
+    font-size: 2rem;
+    position: fixed;
+    bottom: 1rem;
+    right: 2rem;
+    padding: 2rem 4rem;
   }
 `;
 
