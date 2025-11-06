@@ -23,11 +23,18 @@ const Dialog = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  @media (max-width: 700px) {
+    padding: 1rem;
+    gap: 1rem;
+  }
 `;
 
 const Title = styled.h3`
   margin: 0 0 1rem 0;
   font-size: 3rem;
+  @media (max-width: 700px) {
+    font-size: 1.6rem;
+  }
 `;
 
 const Field = styled.div`
@@ -47,6 +54,9 @@ const Buttons = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 1.5rem;
+  @media (max-width: 700px) {
+    gap: 0.75rem;
+  }
 `;
 
 const Button = styled.button`
@@ -60,6 +70,10 @@ const Button = styled.button`
 
   &:hover {
     background-color: ${(props) => (props.$cancel ? 'var(--danger-hover)' : 'var(--success-hover)')};
+  }
+  @media (max-width: 700px) {
+    padding: 0.5rem 1rem;
+    font-size: 1.2rem;
   }
 `;
 

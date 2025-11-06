@@ -12,6 +12,13 @@ const Container = styled.div`
   display: flex;
   justify-content: center;
   gap: 2rem;
+
+  @media (max-width: 700px) {
+    padding: 1.2rem;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
 `;
 
 const Input = styled.input`
@@ -21,6 +28,12 @@ const Input = styled.input`
   outline: none;
   transition: border-color 0.3s ease;
   font-size: 1.6rem;
+
+  @media (max-width: 700px) {
+    padding: 1.1rem;
+    font-size: 1.4rem;
+    width: 100%;
+  }
 
   &:focus {
     border: 2px solid var(--main-light);
@@ -46,6 +59,11 @@ const Button = styled.button`
 
   &:hover {
     background-color: var(--main-hover);
+  }
+  @media (max-width: 700px) {
+    font-size: 1.4rem;
+    padding: 0.9rem 1rem;
+    width: 100%;
   }
 `;
 

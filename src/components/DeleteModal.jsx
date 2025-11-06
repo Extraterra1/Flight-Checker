@@ -19,11 +19,17 @@ const Dialog = styled.div`
   min-width: 320px;
   max-width: 90%;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  @media (max-width: 700px) {
+    padding: 1rem;
+  }
 `;
 
 const Message = styled.p`
   font-size: 1.6rem;
   margin: 0 0 1.25rem 0;
+  @media (max-width: 700px) {
+    font-size: 1.2rem;
+  }
 `;
 
 const Buttons = styled.div`
@@ -48,6 +54,10 @@ const Button = styled.button`
   &.confirm {
     background: var(--danger);
     color: white;
+  }
+  @media (max-width: 700px) {
+    padding: 0.45rem 0.8rem;
+    font-size: 1.1rem;
   }
 `;
 

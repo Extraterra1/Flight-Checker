@@ -28,6 +28,12 @@ const Controls = styled.div`
   display: flex;
   justify-content: flex-end;
   padding: 0 3rem 1rem 3rem;
+  box-sizing: border-box;
+
+  @media (max-width: 700px) {
+    padding: 0 1rem 0.75rem 1rem;
+    justify-content: center;
+  }
 `;
 
 const RefreshAllButton = styled.button`
@@ -47,12 +53,19 @@ const RefreshAllButton = styled.button`
     outline: none;
     border: none;
   }
+  @media (max-width: 700px) {
+    padding: 0.6rem 1rem;
+    font-size: 1.4rem;
+  }
 `;
 
 const EmptyMessage = styled.h4`
   color: var(--dark);
   font-size: 3rem;
   align-self: center;
+  @media (max-width: 700px) {
+    font-size: 1.6rem;
+  }
 `;
 
 const FlightsContainer = styled.div`
@@ -89,6 +102,19 @@ const FlightItem = styled.div`
   font-size: 3rem;
   background-color: var(--main-light);
   color: var(--light);
+
+  @media (max-width: 900px) {
+    padding: 1.2rem 1.2rem;
+    font-size: 1.8rem;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+    padding: 0.9rem 0.9rem;
+    font-size: 1.6rem;
+  }
 
   & > div {
     > span.flight {
