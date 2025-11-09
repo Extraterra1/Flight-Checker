@@ -88,6 +88,7 @@ button:focus-visible {
 }
 input,
 select {
+  color: black !important;
   -webkit-background-clip: text !important;
   background-clip: text !important;
 }
