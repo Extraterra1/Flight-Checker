@@ -4,6 +4,7 @@ import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { MdRadar, MdDelete, MdEdit, MdRefresh } from 'react-icons/md';
+import { PulseLoader } from 'react-spinners';
 
 import { db } from '../firebase';
 import DeleteModal from './DeleteModal';
@@ -202,7 +203,7 @@ const FlightItem = styled.div`
   }
 `;
 
-const FlightList = ({ flights, setFlights }) => {
+const FlightList = ({ flights, setFlights, loading }) => {
   // Modal state for delete confirmation
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
@@ -362,7 +363,11 @@ const FlightList = ({ flights, setFlights }) => {
           Refresh All
         </RefreshAllButton>
       </Controls>
-      {flights.length === 0 ? (
+      {loading ? (
+        <div className="empty">
+          <PulseLoader color="var(--main)" size={15} margin={5} />
+        </div>
+      ) : flights.length === 0 ? (
         <div className="empty">
           <EmptyMessage>No flights added yet.</EmptyMessage>
         </div>

@@ -17,6 +17,8 @@ const Main = styled.main`
 
 function App() {
   const [flights, setFlights] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   // Realtime subscription to flights collection
   useEffect(() => {
     // Query with orderBy to keep a stable ordering on server-side (we still sort by arriving client-side)
@@ -53,9 +55,11 @@ function App() {
         // Sort by arriving time ascending (earliest first)
         list.sort((a, b) => parseArriving(a.arriving) - parseArriving(b.arriving));
         setFlights(list);
+        setLoading(false);
       },
       (error) => {
         console.error('Realtime flights subscription error:', error);
+        setLoading(false);
       }
     );
 
@@ -66,7 +70,7 @@ function App() {
       <Header />
       <Main>
         <FlightInput flights={flights} setFlights={setFlights} />
-        <FlightList flights={flights} setFlights={setFlights} />
+        <FlightList flights={flights} setFlights={setFlights} loading={loading} />
       </Main>
       <Toaster toastOptions={{ className: 'toast' }} />
     </>
