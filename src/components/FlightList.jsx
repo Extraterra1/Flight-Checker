@@ -1,10 +1,13 @@
 import styled from 'styled-components';
 import { useState } from 'react';
-import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { doc, deleteDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import axios from 'axios';
-import { MdRadar, MdDelete, MdEdit, MdRefresh } from 'react-icons/md';
+import { MdRadar, MdDelete, MdEdit, MdRefresh, MdDragIndicator } from 'react-icons/md';
 import { PulseLoader } from 'react-spinners';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 import { db } from '../firebase';
 import DeleteModal from './DeleteModal';
@@ -108,6 +111,12 @@ const FlightItem = styled.div`
   background-color: var(--main-light);
   color: var(--light);
 
+  cursor: ${({ $isDragging }) => ($isDragging ? 'grabbing' : 'default')};
+  opacity: ${({ $isDragging }) => ($isDragging ? 0.5 : 1)};
+  transition: opacity 0.2s ease;
+  transform: ${({ $transform }) => $transform};
+  transition: ${({ $transition }) => $transition};
+
   @media (max-width: 900px) {
     padding: 1.2rem 1.2rem;
     font-size: 1.8rem;
@@ -165,6 +174,22 @@ const FlightItem = styled.div`
         border-top: 2px dashed var(--light);
       }
     }
+
+    & .drag-handle {
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 1rem;
+
+      &:active {
+        cursor: grabbing;
+      }
+
+      &:hover {
+        color: var(--dark);
+      }
+    }
   }
 
   & > div:last-child {
@@ -203,10 +228,65 @@ const FlightItem = styled.div`
   }
 `;
 
+// Sortable wrapper component for individual flight items
+const SortableFlightItem = ({ flight, refreshFlight, openEditModal, openDeleteModal }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: flight.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition
+  };
+
+  return (
+    <FlightItem ref={setNodeRef} style={style} $isDragging={isDragging} $transform={style.transform} $transition={style.transition}>
+      <div className="info">
+        <div className="drag-handle" {...attributes} {...listeners}>
+          <MdDragIndicator />
+        </div>
+        <div className="flightNumber">
+          <span className="flight">Flight:</span>
+          <span className="number">{flight.icao + flight.number}</span>
+        </div>
+        <div className="car">
+          <span className="plate">{flight.car && flight.car.plate}</span>
+          <span className="model">{flight.car && flight.car.model}</span>
+        </div>
+      </div>
+      <div className="actions">
+        <Status $status={flight.status}>{flight.status}</Status>
+        <span className="time">{`${flight.status != 'Arrived' ? 'Lands at ' : 'Landed at '} ${flight.arriving}`}</span>
+
+        <div className="icons">
+          <a
+            href={`https://www.flightradar24.com/${flight.icao}${flight.number}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="View on Flightradar"
+            className="radar"
+          >
+            <MdRadar />
+          </a>
+          <MdRefresh onClick={() => refreshFlight(flight.id)} className="refresh" />
+          <MdEdit onClick={(e) => openEditModal(flight, e)} className="edit" />
+          <MdDelete onClick={(e) => openDeleteModal(flight.id, e)} className="delete" />
+        </div>
+      </div>
+    </FlightItem>
+  );
+};
+
 const FlightList = ({ flights, setFlights, loading }) => {
   // Modal state for delete confirmation
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  );
 
   const openDeleteModal = (id, e) => {
     if (e && e.stopPropagation) e.stopPropagation();
@@ -318,8 +398,6 @@ const FlightList = ({ flights, setFlights, loading }) => {
     }
   };
 
-  // removed placeholder
-
   // Edit modal state
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingFlight, setEditingFlight] = useState(null);
@@ -356,6 +434,38 @@ const FlightList = ({ flights, setFlights, loading }) => {
     }
   };
 
+  // Handle drag end
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = flights.findIndex((f) => f.id === active.id);
+    const newIndex = flights.findIndex((f) => f.id === over.id);
+
+    const reorderedFlights = arrayMove(flights, oldIndex, newIndex);
+
+    // Update local state immediately for smooth UX
+    setFlights(reorderedFlights);
+
+    // Persist order to Firebase
+    try {
+      const batch = writeBatch(db);
+      reorderedFlights.forEach((flight, index) => {
+        const flightRef = doc(db, 'flights', flight.id);
+        batch.update(flightRef, { order: index });
+      });
+      await batch.commit();
+    } catch (error) {
+      console.error('Error updating flight order:', error);
+      toast.error('Failed to save new order');
+      // Revert on error
+      setFlights(flights);
+    }
+  };
+
   return (
     <Container>
       <Controls>
@@ -373,39 +483,19 @@ const FlightList = ({ flights, setFlights, loading }) => {
         </div>
       ) : (
         <FlightsContainer>
-          {flights.map((flight) => (
-            <FlightItem key={flight.id}>
-              <div className="info">
-                <div className="flightNumber">
-                  <span className="flight">Flight:</span>
-                  <span className="number">{flight.icao + flight.number}</span>
-                </div>
-                <div className="car">
-                  <span className="plate">{flight.car && flight.car.plate}</span>
-                  <span className="model">{flight.car && flight.car.model}</span>
-                </div>
-              </div>
-              <div className="actions">
-                <Status $status={flight.status}>{flight.status}</Status>
-                <span className="time">{`${flight.status != 'Arrived' ? 'Lands at ' : 'Landed at '} ${flight.arriving}`}</span>
-
-                <div className="icons">
-                  <a
-                    href={`https://www.flightradar24.com/${flight.icao}${flight.number}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="View on Flightradar"
-                    className="radar"
-                  >
-                    <MdRadar />
-                  </a>
-                  <MdRefresh onClick={() => refreshFlight(flight.id)} className="refresh" />
-                  <MdEdit onClick={(e) => openEditModal(flight, e)} className="edit" />
-                  <MdDelete onClick={(e) => openDeleteModal(flight.id, e)} className="delete" />
-                </div>
-              </div>
-            </FlightItem>
-          ))}
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={flights.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+              {flights.map((flight) => (
+                <SortableFlightItem
+                  key={flight.id}
+                  flight={flight}
+                  refreshFlight={refreshFlight}
+                  openEditModal={openEditModal}
+                  openDeleteModal={openDeleteModal}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
         </FlightsContainer>
       )}
       <DeleteModal isOpen={isModalOpen} onConfirm={performDelete} onCancel={closeModal} />

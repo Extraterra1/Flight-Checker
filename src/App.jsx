@@ -52,8 +52,18 @@ function App() {
       q,
       (snapshot) => {
         const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        // Sort by arriving time ascending (earliest first)
-        list.sort((a, b) => parseArriving(a.arriving) - parseArriving(b.arriving));
+        // Sort by order field if it exists, otherwise by arriving time (earliest first)
+        list.sort((a, b) => {
+          // If both have order field, use that
+          if (a.order !== undefined && b.order !== undefined) {
+            return a.order - b.order;
+          }
+          // If only one has order, prioritize it
+          if (a.order !== undefined) return -1;
+          if (b.order !== undefined) return 1;
+          // Otherwise sort by arriving time
+          return parseArriving(a.arriving) - parseArriving(b.arriving);
+        });
         setFlights(list);
         setLoading(false);
       },

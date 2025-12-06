@@ -99,7 +99,8 @@ const FlightInput = ({ flights, setFlights }) => {
           date: serverTimestamp(),
           icao: icao,
           number: number,
-          status: flightData.status || 'N/A' // Use API data if available
+          status: flightData.status || 'N/A', // Use API data if available
+          order: flights.length // Add to the end of the list
         };
 
         const docRef = await addDoc(collection(db, 'flights'), newFlight);
