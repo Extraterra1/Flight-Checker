@@ -258,7 +258,21 @@ const SortableFlightItem = ({ flight, refreshFlight, openEditModal, openDeleteMo
 
         <div className="icons">
           <a
-            href={`https://www.flightradar24.com/${flight.icao}${flight.number}`}
+            href={`https://www.flightradar24.com/${(() => {
+              const icao = flight.icao.toLowerCase();
+              const number = flight.number;
+
+              // Handle 4y* → OCN
+              if (icao === '4y*') return 'OCN' + number;
+
+              // Handle LX8xxx → WKxxx (remove the leading 8)
+              if (icao === 'lx' && number.startsWith('8')) {
+                return 'WK' + number.substring(1);
+              }
+
+              // Default case
+              return flight.icao + number;
+            })()}`}
             target="_blank"
             rel="noopener noreferrer"
             title="View on Flightradar"
