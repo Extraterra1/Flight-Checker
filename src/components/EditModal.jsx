@@ -133,6 +133,7 @@ const EditModal = ({ isOpen, flight, cars = [], onConfirm, onCancel }) => {
             isSearchable
             placeholder="Select a car..."
             styles={selectStyles}
+            autoFocus
           />
         </Field>
 
