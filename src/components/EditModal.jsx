@@ -108,13 +108,14 @@ const EditModal = ({ isOpen, flight, cars = [], onConfirm, onCancel }) => {
       boxShadow: state.isFocused ? `0 0 0 1px var(--main)` : base.boxShadow,
       color: 'var(--dark)'
     }),
-    singleValue: (base) => ({ ...base, color: 'var(--dark)' }),
-    placeholder: (base) => ({ ...base, color: 'var(--dark)', opacity: 0.8 }),
-    input: (base) => ({ ...base, color: 'var(--dark)' }),
+    singleValue: (base) => ({ ...base, color: 'var(--dark)', fontSize: '16.5px' }),
+    placeholder: (base) => ({ ...base, color: 'var(--dark)', opacity: 0.8, fontSize: '16.5px' }),
+    input: (base) => ({ ...base, color: 'var(--dark)', fontSize: '16.5px' }),
     option: (base, state) => ({
       ...base,
       color: state.isSelected ? 'white' : 'var(--dark) ',
-      backgroundColor: state.isSelected ? 'var(--main)' : base.backgroundColor
+      backgroundColor: state.isSelected ? 'var(--main)' : base.backgroundColor,
+      fontSize: '16.5px'
     })
   };
 
