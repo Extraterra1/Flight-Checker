@@ -77,6 +77,7 @@ const FlightInput = ({ flights, setFlights }) => {
       if (icao === 'W4') icao = 'WMT';
       if (icao === 'DI') icao = 'MBU';
       if (icao === '4Y') icao = '4Y*';
+      if (icao === 'TB') icao = 'JAF';
       const number = flightNumber.slice(2);
 
       // Create the promise for fetching flight data
