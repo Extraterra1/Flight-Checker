@@ -31,7 +31,7 @@ const Input = styled.input`
 
   @media (max-width: 700px) {
     padding: 1.5rem;
-    font-size: 1.4rem;
+    font-size: 2rem;
     width: 100%;
   }
 
