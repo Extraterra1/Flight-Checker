@@ -81,6 +81,10 @@ const FlightsContainer = styled.div`
   flex-direction: column;
   gap: 1rem;
   flex-grow: 1;
+
+  @media (max-width: 700px) {
+    padding-bottom: 8rem;
+  }
 `;
 
 const Status = styled.span`
