@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import Select from 'react-select';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 
 const Overlay = styled.div`
   position: fixed;
@@ -52,6 +54,10 @@ const Input = styled.input`
   padding: 0.8rem 1rem;
   border-radius: 0.6rem;
   border: 1px solid #c7c7c7;
+  background-color: #ffffff;
+  -webkit-background-clip: padding-box !important;
+  background-clip: padding-box !important;
+  color: var(--dark);
   outline: none;
   font-size: 1.6rem;
   @media (max-width: 700px) {
@@ -88,21 +94,47 @@ const Button = styled.button`
 
 const ManualAddModal = ({ isOpen, cars = [], carOptions = [], initialFlightNumber = '', onConfirm, onCancel }) => {
   const [manualFlightNumber, setManualFlightNumber] = useState('');
-  const [arrivalTime, setArrivalTime] = useState('');
+  const [arrivalTime, setArrivalTime] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
 
   useEffect(() => {
     if (!isOpen) return;
     setManualFlightNumber(initialFlightNumber || '');
-    setArrivalTime('');
+    setArrivalTime(null);
     setSelectedOption(null);
   }, [isOpen, initialFlightNumber]);
+
+  const formattedTime = arrivalTime && arrivalTime.isValid && arrivalTime.isValid() ? arrivalTime.format('h:mm A') : '';
 
   if (!isOpen) return null;
 
   const handleConfirm = () => {
     const selectedCar = cars.find((c) => c.plate === (selectedOption && selectedOption.value)) || null;
-    onConfirm({ flightNumber: manualFlightNumber, arrivalTime, selectedCar });
+    onConfirm({ flightNumber: manualFlightNumber, arrivalTime: formattedTime, selectedCar });
+  };
+
+  const timeFieldSx = {
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: '#ffffff',
+      borderRadius: '0.6rem'
+    },
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#c7c7c7'
+    },
+    '& .MuiInputBase-input': {
+      color: 'var(--dark)',
+      fontSize: '1.6rem',
+      padding: '0.9rem 1rem',
+      backgroundColor: '#ffffff',
+      WebkitBackgroundClip: 'padding-box',
+      backgroundClip: 'padding-box'
+    },
+    '& .MuiInputBase-root': {
+      backgroundColor: '#ffffff'
+    },
+    '& .MuiOutlinedInput-input': {
+      backgroundColor: '#ffffff'
+    }
   };
 
   // react-select custom styles: ensure text uses the app variable --dark and keep menu above modal
@@ -110,7 +142,7 @@ const ManualAddModal = ({ isOpen, cars = [], carOptions = [], initialFlightNumbe
     menu: (base) => ({ ...base, zIndex: 2000 }),
     control: (base, state) => ({
       ...base,
-      background: 'white',
+      background: '#ffffff',
       borderColor: state.isFocused ? 'var(--main)' : base.borderColor,
       boxShadow: state.isFocused ? `0 0 0 1px var(--main)` : base.boxShadow,
       color: 'var(--dark)'
@@ -144,7 +176,19 @@ const ManualAddModal = ({ isOpen, cars = [], carOptions = [], initialFlightNumbe
 
         <Field>
           <label htmlFor="manual-arrival-time">Arrival Time *</label>
-          <Input id="manual-arrival-time" type="time" value={arrivalTime} onChange={(e) => setArrivalTime(e.target.value)} />
+          <TimePicker
+            sx={{
+              '& .MuiPickersInputBase-root ': {
+                bgcolor: 'var(--light)', // background
+                borderRadius: 1
+              }
+            }}
+            value={arrivalTime}
+            onChange={setArrivalTime}
+            ampm
+            timeSteps={{ minutes: 5 }}
+            views={['hours', 'minutes']}
+          />
         </Field>
 
         <Field>

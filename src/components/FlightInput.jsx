@@ -205,8 +205,8 @@ const FlightInput = ({ flights, setFlights }) => {
       toast.error('Please enter a valid flight number.');
       return;
     }
-    if (!arrivalTime || arrivalTime.trim() === '') {
-      toast.error('Please enter an arrival time.');
+    if (!arrivalTime) {
+      toast.error('Please select an arrival time.');
       return;
     }
 
