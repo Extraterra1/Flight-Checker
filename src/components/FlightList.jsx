@@ -96,6 +96,8 @@ const Status = styled.span`
         return 'var(--primary)'; // Orange
       case 'Arrived':
         return 'var(--success)'; // Green
+      case 'Manual':
+        return 'var(--gray)'; // Gray
       default:
         return 'var(--gray)'; // Gray (fallback)
     }
