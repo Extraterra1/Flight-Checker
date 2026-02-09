@@ -124,6 +124,12 @@ const DropdownItem = styled.button`
   &:hover {
     background: var(--main);
   }
+
+  @media (max-width: 700px) {
+    padding: 2rem 4rem;
+    font-size: 2rem;
+    font-weight: bold;
+  }
 `;
 
 const FlightInput = ({ flights, setFlights }) => {

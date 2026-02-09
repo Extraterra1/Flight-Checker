@@ -54,14 +54,14 @@ const Input = styled.input`
   padding: 0.8rem 1rem;
   border-radius: 0.6rem;
   border: 1px solid #c7c7c7;
-  background-color: #ffffff;
+  background-color: var(--light);
   -webkit-background-clip: padding-box !important;
   background-clip: padding-box !important;
   color: var(--dark);
   outline: none;
-  font-size: 1.6rem;
+  font-size: 16px;
   @media (max-width: 700px) {
-    font-size: 1.4rem;
+    font-size: 16px;
   }
 `;
 
@@ -113,30 +113,6 @@ const ManualAddModal = ({ isOpen, cars = [], carOptions = [], initialFlightNumbe
     onConfirm({ flightNumber: manualFlightNumber, arrivalTime: formattedTime, selectedCar });
   };
 
-  const timeFieldSx = {
-    '& .MuiOutlinedInput-root': {
-      backgroundColor: '#ffffff',
-      borderRadius: '0.6rem'
-    },
-    '& .MuiOutlinedInput-notchedOutline': {
-      borderColor: '#c7c7c7'
-    },
-    '& .MuiInputBase-input': {
-      color: 'var(--dark)',
-      fontSize: '1.6rem',
-      padding: '0.9rem 1rem',
-      backgroundColor: '#ffffff',
-      WebkitBackgroundClip: 'padding-box',
-      backgroundClip: 'padding-box'
-    },
-    '& .MuiInputBase-root': {
-      backgroundColor: '#ffffff'
-    },
-    '& .MuiOutlinedInput-input': {
-      backgroundColor: '#ffffff'
-    }
-  };
-
   // react-select custom styles: ensure text uses the app variable --dark and keep menu above modal
   const selectStyles = {
     menu: (base) => ({ ...base, zIndex: 2000 }),
@@ -185,7 +161,7 @@ const ManualAddModal = ({ isOpen, cars = [], carOptions = [], initialFlightNumbe
             }}
             value={arrivalTime}
             onChange={setArrivalTime}
-            ampm
+            ampm={false}
             timeSteps={{ minutes: 5 }}
             views={['hours', 'minutes']}
           />
