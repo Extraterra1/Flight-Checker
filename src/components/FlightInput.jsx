@@ -148,6 +148,7 @@ const FlightInput = ({ flights, setFlights }) => {
     if (icao === 'DI') icao = 'MBU';
     if (icao === '4Y') icao = '4Y*';
     if (icao === 'TB') icao = 'JAF';
+    if (icao === 'D8') icao = 'D8*';
     const number = value.slice(2);
     return { icao, number };
   };
