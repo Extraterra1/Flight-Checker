@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import styled from 'styled-components';
 import Select from 'react-select';
 
@@ -80,15 +80,35 @@ const Button = styled.button`
 const EditModal = ({ isOpen, flight, cars = [], onConfirm, onCancel }) => {
   // react-select uses an object option { value, label }
   const [selectedOption, setSelectedOption] = useState(null);
+  const [inputValue, setInputValue] = useState('');
+  const selectRef = useRef(null);
+  const saveButtonRef = useRef(null);
 
   // Memoize options so their identity is stable across renders — prevents effect from resetting selection
   const options = useMemo(() => cars.map((c) => ({ value: c.plate, label: `${c.plate} — ${c.model}` })), [cars]);
+
+  const normalize = (value = '') => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  const findFirstMatch = (value) => {
+    const needle = normalize(value);
+    if (!needle) return null;
+
+    const startsWithMatch = options.find((o) => normalize(o.value).startsWith(needle));
+    if (startsWithMatch) return startsWithMatch;
+
+    return options.find((o) => {
+      const plate = normalize(o.value);
+      const label = normalize(o.label);
+      return plate.includes(needle) || label.includes(needle);
+    }) || null;
+  };
 
   useEffect(() => {
     if (!isOpen) return;
     const initialPlate = flight && flight.car ? flight.car.plate : (cars[0] && cars[0].plate) || null;
     const initial = options.find((o) => o.value === initialPlate) || options[0] || null;
     setSelectedOption(initial);
+    setInputValue('');
   }, [isOpen, flight, options, cars]);
 
   if (!isOpen) return null;
@@ -96,6 +116,26 @@ const EditModal = ({ isOpen, flight, cars = [], onConfirm, onCancel }) => {
   const handleConfirm = () => {
     const selectedCar = cars.find((c) => c.plate === (selectedOption && selectedOption.value)) || null;
     onConfirm(selectedCar);
+  };
+
+  const handleSelectKeyDown = (event) => {
+    if (event.key !== 'Enter') return;
+
+    const match = findFirstMatch(inputValue);
+
+    if (inputValue.trim()) {
+      event.preventDefault();
+      if (match) {
+        setSelectedOption(match);
+        setInputValue('');
+        selectRef.current?.blur();
+        saveButtonRef.current?.focus();
+      }
+      return;
+    }
+
+    event.preventDefault();
+    handleConfirm();
   };
 
   // react-select custom styles: ensure text uses the app variable --dark and keep menu above modal
@@ -127,10 +167,25 @@ const EditModal = ({ isOpen, flight, cars = [], onConfirm, onCancel }) => {
         <Field>
           <label htmlFor="car-select">Choose a car</label>
           <Select
+            ref={selectRef}
             inputId="car-select"
             options={options}
             value={selectedOption}
             onChange={setSelectedOption}
+            inputValue={inputValue}
+            onInputChange={(value, meta) => {
+              if (meta.action === 'input-change' || meta.action === 'set-value' || meta.action === 'input-blur') {
+                setInputValue(value);
+              }
+            }}
+            filterOption={(candidate, value) => {
+              const needle = normalize(value);
+              if (!needle) return true;
+              const plate = normalize(candidate.value);
+              const label = normalize(candidate.label);
+              return plate.includes(needle) || label.includes(needle);
+            }}
+            onKeyDown={handleSelectKeyDown}
             isSearchable
             placeholder="Select a car..."
             styles={selectStyles}
@@ -142,7 +197,7 @@ const EditModal = ({ isOpen, flight, cars = [], onConfirm, onCancel }) => {
           <Button $cancel onClick={onCancel} aria-label="Cancel">
             Cancel
           </Button>
-          <Button $save onClick={handleConfirm} aria-label="Save">
+          <Button ref={saveButtonRef} $save onClick={handleConfirm} aria-label="Save">
             Save
           </Button>
         </Buttons>
