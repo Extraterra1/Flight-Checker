@@ -2,13 +2,14 @@ import styled from 'styled-components';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import axios from 'axios';
 import { MdArrowDropDown } from 'react-icons/md';
 
 // import cars from '/src/cars.json';
 import { db } from '../firebase';
 import cars from '../cars.json';
 import ManualAddModal from './ManualAddModal';
+import { fetchSingleFlightStatus, formatArrival, getFr24ErrorMessage, normalizeStatus } from '../services/fr24Client';
+import { FLIGHTS_COLLECTION } from '../config/firestoreCollections';
 
 const Container = styled.div`
   padding: 3rem;
@@ -141,16 +142,17 @@ const FlightInput = ({ flights, setFlights }) => {
   const carOptions = useMemo(() => cars.map((c) => ({ value: c.plate, label: `${c.plate} — ${c.model}` })), []);
 
   const parseFlightNumber = (value) => {
+    const sanitized = value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     const flightNumberPattern = /^(?:[A-Z0-9]{1,3})\d{2,5}$/;
-    if (value.trim() === '' || !flightNumberPattern.test(value)) return null;
-    let icao = value.slice(0, 2);
+    if (sanitized === '' || !flightNumberPattern.test(sanitized)) return null;
+    let icao = sanitized.slice(0, 2);
     if (icao === 'W4') icao = 'WMT';
     if (icao === 'DI') icao = 'MBU';
     if (icao === '4Y') icao = '4Y*';
     if (icao === 'TB') icao = 'JAF';
     if (icao === 'D8') icao = 'D8*';
-    const number = value.slice(2);
-    return { icao, number };
+    const number = sanitized.slice(2);
+    return { flightNumber: sanitized, icao, number };
   };
 
   useEffect(() => {
@@ -166,39 +168,38 @@ const FlightInput = ({ flights, setFlights }) => {
   const handleAddFlight = async () => {
     const parsed = parseFlightNumber(flightNumber);
     if (parsed) {
-      const { icao, number } = parsed;
+      const { icao, number, flightNumber: canonicalFlightNumber } = parsed;
 
-      // Create the promise for fetching flight data
-      const fetchFlightData = axios.get(`${import.meta.env.VITE_API_URL}?icao=${icao}&number=${number}`);
+      const fetchFlightData = fetchSingleFlightStatus(canonicalFlightNumber);
 
       try {
-        // Use toast.promise to show loading, success, and error states
         const response = await toast.promise(fetchFlightData, {
           loading: 'Fetching flight information...'
-          // success: 'Flight data retrieved!'
         });
 
-        // Use the API response data
-        const flightData = response.data;
+        if (response.lookupState !== 'ok') {
+          toast.error('Flight not found. Please check the flight number and try again.');
+          return;
+        }
 
         const newFlight = {
-          arriving: flightData.time || 'N/A', // Use API data if available
+          arriving: formatArrival(response),
           car: '',
           clientName: '',
           date: serverTimestamp(),
+          flightNumber: canonicalFlightNumber,
           icao: icao,
           number: number,
-          status: flightData.status || 'N/A', // Use API data if available
-          order: flights.length // Add to the end of the list
+          status: normalizeStatus(response.status || response.rawStatus),
+          order: flights.length
         };
 
-        const docRef = await addDoc(collection(db, 'flights'), newFlight);
+        const docRef = await addDoc(collection(db, FLIGHTS_COLLECTION), newFlight);
         setFlights([...flights, { id: docRef.id, ...newFlight }]);
         setFlightNumber('');
         toast.success('Flight added to the list!');
       } catch (err) {
-        if (err.status === 404) return toast.error('Flight not found. Please check the flight number and try again.');
-        toast.error('Something went wrong');
+        toast.error(getFr24ErrorMessage(err));
         console.error('Error adding document: ', err);
       }
     } else {
@@ -223,13 +224,14 @@ const FlightInput = ({ flights, setFlights }) => {
         car: selectedCar || '',
         clientName: '',
         date: serverTimestamp(),
+        flightNumber: parsed.flightNumber,
         icao: parsed.icao,
         number: parsed.number,
         status: 'Manual',
         order: flights.length
       };
 
-      const docRef = await addDoc(collection(db, 'flights'), newFlight);
+      const docRef = await addDoc(collection(db, FLIGHTS_COLLECTION), newFlight);
       setFlights([...flights, { id: docRef.id, ...newFlight }]);
       setIsManualOpen(false);
       setIsDropdownOpen(false);

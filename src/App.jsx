@@ -8,6 +8,7 @@ import Header from './components/Header';
 import FlightInput from './components/FlightInput';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
+import { FLIGHTS_COLLECTION } from './config/firestoreCollections';
 
 const Main = styled.main`
   background-color: var(--light);
@@ -22,7 +23,7 @@ function App() {
   // Realtime subscription to flights collection
   useEffect(() => {
     // Query with orderBy to keep a stable ordering on server-side (we still sort by arriving client-side)
-    const q = query(collection(db, 'flights'), orderBy('date', 'desc'));
+    const q = query(collection(db, FLIGHTS_COLLECTION), orderBy('date', 'desc'));
 
     const parseArriving = (val) => {
       // Firestore Timestamp
