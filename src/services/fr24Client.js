@@ -109,6 +109,16 @@ export const resolveFlightNumber = (flight) => {
   return normalizeFlightInput(`${normalizedPrefix}${number}`);
 };
 
+export const findFlightIdsByNumber = (flights, flightNumber) => {
+  const normalized = normalizeFlightInput(flightNumber);
+  if (!normalized) return [];
+
+  return (flights || [])
+    .filter((flight) => resolveFlightNumber(flight) === normalized)
+    .map((flight) => flight.id)
+    .filter(Boolean);
+};
+
 export const chunkFlightNumbers = (flightNumbers, batchSize = DEFAULT_BATCH_SIZE) => {
   const unique = [...new Set((flightNumbers || []).map((value) => normalizeFlightInput(value)).filter(Boolean))];
   const chunks = [];

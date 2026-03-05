@@ -7,7 +7,8 @@ import {
   resolveFlightNumber,
   chunkFlightNumbers,
   getTodayMadeiraDate,
-  resolveApiKey
+  resolveApiKey,
+  findFlightIdsByNumber
 } from '../src/services/fr24Client.js';
 
 test('normalizeStatus maps API statuses to UI labels', () => {
@@ -47,6 +48,12 @@ test('chunkFlightNumbers enforces max 25 per request', () => {
   assert.equal(chunks[2].length, 7);
 });
 
+test('chunkFlightNumbers de-duplicates repeated flight numbers', () => {
+  const chunks = chunkFlightNumbers(['TP1687', 'TP1687', 'U27653'], 25);
+  assert.equal(chunks.length, 1);
+  assert.deepEqual(chunks[0], ['TP1687', 'U27653']);
+});
+
 test('getTodayMadeiraDate returns YYYY-MM-DD', () => {
   const today = getTodayMadeiraDate();
   assert.match(today, /^\d{4}-\d{2}-\d{2}$/);
@@ -58,4 +65,16 @@ test('resolveApiKey trims configured key', () => {
 
 test('resolveApiKey falls back to legacy VITE_API_KEY', () => {
   assert.equal(resolveApiKey({ VITE_API_KEY: 'legacy-key' }), 'legacy-key');
+});
+
+test('findFlightIdsByNumber returns every entry sharing the same resolved flight number', () => {
+  const flights = [
+    { id: 'a', flightNumber: 'TP1687' },
+    { id: 'b', icao: 'TP', number: '1687' },
+    { id: 'c', flightNumber: 'U27653' },
+    { id: 'd', icao: 'WMT', number: '6110' }
+  ];
+
+  assert.deepEqual(findFlightIdsByNumber(flights, 'TP1687'), ['a', 'b']);
+  assert.deepEqual(findFlightIdsByNumber(flights, 'W46110'), ['d']);
 });

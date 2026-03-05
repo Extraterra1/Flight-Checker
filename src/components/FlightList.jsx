@@ -12,7 +12,15 @@ import { db } from '../firebase';
 import DeleteModal from './DeleteModal';
 import EditModal from './EditModal';
 import cars from '../cars.json';
-import { fetchBatchFlightStatus, fetchSingleFlightStatus, formatArrival, getFr24ErrorMessage, normalizeStatus, resolveFlightNumber } from '../services/fr24Client';
+import {
+  fetchBatchFlightStatus,
+  fetchSingleFlightStatus,
+  findFlightIdsByNumber,
+  formatArrival,
+  getFr24ErrorMessage,
+  normalizeStatus,
+  resolveFlightNumber
+} from '../services/fr24Client';
 import { FLIGHTS_COLLECTION } from '../config/firestoreCollections';
 
 const Container = styled.div`
@@ -449,22 +457,39 @@ const FlightList = ({ flights, setFlights, loading }) => {
         return;
       }
 
-      const flightRef = doc(db, FLIGHTS_COLLECTION, id);
-      const updatedFlight = {
-        ...flight,
-        arriving: formatArrival(response),
-        status: normalizeStatus(response.status || response.rawStatus),
-        flightNumber: flight.flightNumber || resolvedFlightNumber
-      };
+      const matchingFlightIds = findFlightIdsByNumber(flights, resolvedFlightNumber);
+      const targetIds = matchingFlightIds.length > 0 ? matchingFlightIds : [id];
 
-      await updateDoc(flightRef, {
-        arriving: updatedFlight.arriving,
-        status: updatedFlight.status,
-        ...(flight.flightNumber ? {} : { flightNumber: resolvedFlightNumber })
-      });
+      await Promise.all(
+        targetIds.map(async (targetId) => {
+          const targetFlight = flights.find((candidate) => candidate.id === targetId);
+          if (!targetFlight) return;
 
-      setFlights((prevFlights) => prevFlights.map((f) => (f.id === id ? { ...f, ...updatedFlight } : f)));
-      toast.success('Flight data updated!', { id: toastId });
+          const payload = {
+            arriving: formatArrival(response),
+            status: normalizeStatus(response.status || response.rawStatus),
+            ...(targetFlight.flightNumber ? {} : { flightNumber: resolvedFlightNumber })
+          };
+
+          await updateDoc(doc(db, FLIGHTS_COLLECTION, targetId), payload);
+        })
+      );
+
+      setFlights((prevFlights) =>
+        prevFlights.map((candidate) =>
+          targetIds.includes(candidate.id)
+            ? {
+                ...candidate,
+                arriving: formatArrival(response),
+                status: normalizeStatus(response.status || response.rawStatus),
+                flightNumber: candidate.flightNumber || resolvedFlightNumber
+              }
+            : candidate
+        )
+      );
+
+      const updatedCount = targetIds.length;
+      toast.success(updatedCount > 1 ? `Flight data updated for ${updatedCount} entries!` : 'Flight data updated!', { id: toastId });
     } catch (err) {
       console.error('Error refreshing flight:', err);
       toast.error(getFr24ErrorMessage(err), { id: toastId });
