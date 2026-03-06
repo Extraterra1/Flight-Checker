@@ -1,16 +1,58 @@
-# React + Vite
+# Flight Checker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite app to manage and refresh flights stored in Firebase.
 
-Currently, two official plugins are available:
+## FR24 Integration (Direct Frontend Calls)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The app calls:
 
-## React Compiler
+- `POST https://fr-24-scraper.vercel.app/api/flights/status`
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+Request shape:
 
-## Expanding the ESLint configuration
+```json
+{
+  "flightNumbers": ["TP1687", "U27653"],
+  "date": "YYYY-MM-DD",
+  "airport": "FNC"
+}
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Headers:
+
+- `Content-Type: application/json`
+- `x-api-key: <VITE_FR24_API_KEY>`
+
+Status mapping in UI:
+
+- `scheduled -> Scheduled`
+- `departed -> Departed`
+- `landed -> Arrived`
+- `unknown -> Unknown`
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill values.
+
+Required FR24 variables:
+
+- `VITE_FR24_API_BASE_URL` (default `https://fr-24-scraper.vercel.app`)
+- `VITE_FR24_API_KEY`
+- `VITE_FR24_AIRPORT` (default `FNC`)
+
+Firebase variables:
+
+- `VITE_FIREBASE_FLIGHTS_COLLECTION` (default `flights_preview`, keeps this branch isolated from production `flights`)
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+- `VITE_FIREBASE_MEASUREMENT_ID`
+
+## Scripts
+
+- `npm run dev`
+- `npm run build`
+- `npm run lint`

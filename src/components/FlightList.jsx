@@ -2,7 +2,6 @@ import styled from 'styled-components';
 import { useState } from 'react';
 import { doc, deleteDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import toast from 'react-hot-toast';
-import axios from 'axios';
 import { MdRadar, MdDelete, MdEdit, MdRefresh, MdDragIndicator } from 'react-icons/md';
 import { PulseLoader } from 'react-spinners';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -13,6 +12,16 @@ import { db } from '../firebase';
 import DeleteModal from './DeleteModal';
 import EditModal from './EditModal';
 import cars from '../cars.json';
+import {
+  fetchBatchFlightStatus,
+  fetchSingleFlightStatus,
+  findFlightIdsByNumber,
+  formatArrival,
+  getFr24ErrorMessage,
+  normalizeStatus,
+  resolveFlightNumber
+} from '../services/fr24Client';
+import { FLIGHTS_COLLECTION } from '../config/firestoreCollections';
 
 const Container = styled.div`
   padding: 2rem;
@@ -97,6 +106,8 @@ const Status = styled.span`
       case 'Arrived':
         return 'var(--success)'; // Green
       case 'Manual':
+        return 'var(--gray)'; // Gray
+      case 'Unknown':
         return 'var(--gray)'; // Gray
       default:
         return 'var(--gray)'; // Gray (fallback)
@@ -237,6 +248,7 @@ const FlightItem = styled.div`
 // Sortable wrapper component for individual flight items
 const SortableFlightItem = ({ flight, refreshFlight, openEditModal, openDeleteModal }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: flight.id });
+  const displayFlightNumber = flight.flightNumber || flight.icao + flight.number;
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -251,7 +263,7 @@ const SortableFlightItem = ({ flight, refreshFlight, openEditModal, openDeleteMo
         </div>
         <div className="flightNumber">
           <span className="flight">Flight:</span>
-          <span className="number">{flight.icao + flight.number}</span>
+          <span className="number">{displayFlightNumber}</span>
         </div>
         <div className="car">
           <span className="plate">{flight.car && flight.car.plate}</span>
@@ -322,7 +334,7 @@ const FlightList = ({ flights, setFlights, loading }) => {
   const performDelete = async () => {
     if (!selectedId) return;
     try {
-      const deletePromise = deleteDoc(doc(db, 'flights', selectedId));
+      const deletePromise = deleteDoc(doc(db, FLIGHTS_COLLECTION, selectedId));
       await toast.promise(deletePromise, {
         loading: 'Deleting flight...',
         success: 'Flight deleted successfully!',
@@ -342,79 +354,145 @@ const FlightList = ({ flights, setFlights, loading }) => {
 
     const toastId = toast.loading('Refreshing all flights...');
 
-    const promises = flights.map(async (flight) => {
-      try {
-        const { icao, number } = flight;
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}?icao=${icao}&number=${number}`);
-        const flightData = response.data;
-        const flightRef = doc(db, 'flights', flight.id);
+    try {
+      const flightsWithLookup = flights.map((flight) => ({
+        flight,
+        resolvedFlightNumber: resolveFlightNumber(flight)
+      }));
+
+      const lookupValues = flightsWithLookup.map((item) => item.resolvedFlightNumber).filter(Boolean);
+
+      const { resultsByFlight, failedByFlight } = await fetchBatchFlightStatus(lookupValues);
+
+      const updatesToPersist = flightsWithLookup.map(({ flight, resolvedFlightNumber }) => {
+        if (!resolvedFlightNumber) {
+          return { id: flight.id, error: new Error('Missing flight number') };
+        }
+
+        if (failedByFlight.has(resolvedFlightNumber)) {
+          return { id: flight.id, error: failedByFlight.get(resolvedFlightNumber) };
+        }
+
+        const result = resultsByFlight.get(resolvedFlightNumber);
+        if (!result || result.lookupState !== 'ok') {
+          return { id: flight.id, error: new Error('Flight not found') };
+        }
+
         const updatedFields = {
-          arriving: flightData.time || flight.arriving,
-          status: flightData.status || flight.status
+          arriving: formatArrival(result),
+          status: normalizeStatus(result.status || result.rawStatus)
         };
-        await updateDoc(flightRef, updatedFields);
+
+        if (!flight.flightNumber) {
+          updatedFields.flightNumber = resolvedFlightNumber;
+        }
+
         return { id: flight.id, updatedFields };
-      } catch (err) {
-        return { id: flight.id, error: err };
-      }
-    });
+      });
 
-    const results = await Promise.all(promises);
+      const successfulUpdates = [];
+      const failedUpdates = [];
 
-    const successes = results.filter((r) => !r.error);
-    const failures = results.filter((r) => r.error);
-
-    if (successes.length > 0) {
-      setFlights((prev) =>
-        prev.map((f) => {
-          const s = successes.find((x) => x.id === f.id);
-          return s ? { ...f, ...s.updatedFields } : f;
+      const persistenceResults = await Promise.all(
+        updatesToPersist.map(async (item) => {
+          if (item.error) return item;
+          try {
+            await updateDoc(doc(db, FLIGHTS_COLLECTION, item.id), item.updatedFields);
+            return item;
+          } catch (error) {
+            return { id: item.id, error };
+          }
         })
       );
-    }
 
-    if (failures.length === 0) {
-      toast.success('All flights refreshed!', { id: toastId });
-    } else {
-      toast.error(`${failures.length} flights failed to refresh`, { id: toastId });
+      persistenceResults.forEach((result) => {
+        if (result.error) {
+          failedUpdates.push(result);
+          return;
+        }
+        successfulUpdates.push(result);
+      });
+
+      if (successfulUpdates.length > 0) {
+        setFlights((prev) =>
+          prev.map((current) => {
+            const match = successfulUpdates.find((item) => item.id === current.id);
+            return match ? { ...current, ...match.updatedFields } : current;
+          })
+        );
+      }
+
+      if (failedUpdates.length === 0) {
+        toast.success('All flights refreshed!', { id: toastId });
+      } else if (successfulUpdates.length > 0) {
+        toast.error(`${failedUpdates.length} flights failed to refresh`, { id: toastId });
+      } else {
+        const firstError = failedUpdates[0]?.error;
+        toast.error(getFr24ErrorMessage(firstError), { id: toastId });
+      }
+    } catch (error) {
+      toast.error(getFr24ErrorMessage(error), { id: toastId });
     }
   };
 
   const refreshFlight = async (id) => {
+    const toastId = toast.loading('Refreshing flight information...');
+
     try {
       const flight = flights.find((f) => f.id === id);
       if (!flight) {
-        toast.error('Flight not found');
+        toast.error('Flight not found', { id: toastId });
         return;
       }
 
-      const { icao, number } = flight;
-      const fetchFlightData = axios.get(`${import.meta.env.VITE_API_URL}?icao=${icao}&number=${number}`);
+      const resolvedFlightNumber = resolveFlightNumber(flight);
+      if (!resolvedFlightNumber) {
+        toast.error('Flight number is missing for this record.', { id: toastId });
+        return;
+      }
 
-      const response = await toast.promise(fetchFlightData, {
-        loading: 'Refreshing flight information...',
-        success: 'Flight data updated!',
-        error: 'Could not refresh flight data'
-      });
+      const response = await fetchSingleFlightStatus(resolvedFlightNumber);
+      if (!response || response.lookupState !== 'ok') {
+        toast.error("Flight not found in today's airport snapshot.", { id: toastId });
+        return;
+      }
 
-      const flightData = response.data;
+      const matchingFlightIds = findFlightIdsByNumber(flights, resolvedFlightNumber);
+      const targetIds = matchingFlightIds.length > 0 ? matchingFlightIds : [id];
 
-      const flightRef = doc(db, 'flights', id);
-      const updatedFlight = {
-        ...flight,
-        arriving: flightData.time || flight.time,
-        status: flightData.status || flight.status
-      };
+      await Promise.all(
+        targetIds.map(async (targetId) => {
+          const targetFlight = flights.find((candidate) => candidate.id === targetId);
+          if (!targetFlight) return;
 
-      await updateDoc(flightRef, {
-        arriving: updatedFlight.arriving,
-        status: updatedFlight.status
-      });
+          const payload = {
+            arriving: formatArrival(response),
+            status: normalizeStatus(response.status || response.rawStatus),
+            ...(targetFlight.flightNumber ? {} : { flightNumber: resolvedFlightNumber })
+          };
 
-      setFlights((prevFlights) => prevFlights.map((f) => (f.id === id ? { ...f, ...updatedFlight } : f)));
+          await updateDoc(doc(db, FLIGHTS_COLLECTION, targetId), payload);
+        })
+      );
+
+      setFlights((prevFlights) =>
+        prevFlights.map((candidate) =>
+          targetIds.includes(candidate.id)
+            ? {
+                ...candidate,
+                arriving: formatArrival(response),
+                status: normalizeStatus(response.status || response.rawStatus),
+                flightNumber: candidate.flightNumber || resolvedFlightNumber
+              }
+            : candidate
+        )
+      );
+
+      const updatedCount = targetIds.length;
+      toast.success(updatedCount > 1 ? `Flight data updated for ${updatedCount} entries!` : 'Flight data updated!', { id: toastId });
     } catch (err) {
       console.error('Error refreshing flight:', err);
-      toast.error('Failed to refresh flight');
+      toast.error(getFr24ErrorMessage(err), { id: toastId });
     }
   };
 
@@ -437,7 +515,7 @@ const FlightList = ({ flights, setFlights, loading }) => {
   const performEdit = async (selectedCar) => {
     if (!editingFlight) return;
     try {
-      const flightRef = doc(db, 'flights', editingFlight.id);
+      const flightRef = doc(db, FLIGHTS_COLLECTION, editingFlight.id);
       const updatePromise = updateDoc(flightRef, { car: selectedCar });
       await toast.promise(updatePromise, {
         loading: 'Updating flight...',
@@ -474,7 +552,7 @@ const FlightList = ({ flights, setFlights, loading }) => {
     try {
       const batch = writeBatch(db);
       reorderedFlights.forEach((flight, index) => {
-        const flightRef = doc(db, 'flights', flight.id);
+        const flightRef = doc(db, FLIGHTS_COLLECTION, flight.id);
         batch.update(flightRef, { order: index });
       });
       await batch.commit();
